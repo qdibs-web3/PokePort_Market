@@ -102,11 +102,10 @@ function App() {
               <div>
                 <div className="text-center mb-8">
                   <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                    Pokemon Card Marketplace
+                    Pokemon Market
                   </h1>
                   <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                    Discover, collect, and trade authentic Pokemon cards with cryptocurrency. 
-                    Connect your wallet to start your journey!
+                    Discover and collect authentic Pokemon cards via crypto. 
                   </p>
                 </div>
                 

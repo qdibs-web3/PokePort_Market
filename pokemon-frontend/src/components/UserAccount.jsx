@@ -112,7 +112,7 @@ const UserAccount = ({ user }) => {
                 <label className="text-sm font-medium text-gray-700">Account Type</label>
                 <div className="flex items-center space-x-2">
                   <Badge className={user.is_admin ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}>
-                    {user.is_admin ? 'Admin' : 'Customer'}
+                    {user.is_admin ? 'Admin' : 'Fren'}
                   </Badge>
                 </div>
               </div>

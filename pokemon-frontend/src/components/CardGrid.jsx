@@ -101,7 +101,7 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black-400 w-5 h-5" />
             <Input
-              placeholder="Search Pokemon cards..."
+              placeholder="Search Pokemon..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -121,50 +121,37 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {filteredCards.map((card) => (
             <Card key={card.id} className="overflow-hidden hover:scale-105 hover:shadow-2xl transition-all duration-500
-             bg-gradient-to-br from-black/10 to-black/10 backdrop-blur-md
-             border border-gray-300 rounded-2xl
-             w-70 mx-auto flex flex-col">
+             bg-gradient-to-br from-black/2 to-black/2 backdrop-blur-md
+             border border-gray-300 rounded-2xl w-70 mx-auto flex flex-col p-0">
               {/* Compact Image Section */}
-              <CardHeader className="p-0 m-0">
-                <div className="w-full h-64 relative overflow-hidden rounded-t-2xl">
-                  {card.image_urls && card.image_urls.length > 0 ? (
-                    <img
-                      src={card.image_urls[currentImageIndex[card.id] || 0]}
-                      alt={card.name}
-                      className="absolute top-0 left-0 w-full h-full object-cover"
-                    />
-                  ) : card.image_url ? (
-                    <img
-                      src={card.image_url}
-                      alt={card.name}
-                      className="absolute top-0 left-0 w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-100">
-                      <Star className="w-6 h-6 text-gray-400 mx-auto mb-1" />
-                      <p className="text-xs text-gray-500">No image</p>
-                    </div>
-                  )}
+              <CardHeader className="relative p-0 m-0">
+                <div className="relative w-full h-64 overflow-hidden rounded-t-2xl">
+                  <img
+                    src={card.image_urls?.[currentImageIndex[card.id] || 0] || card.image_url}
+                    alt={card.name}
+                    className="w-full h-full object-cover block"
+                  />
                 </div>
-                {/* Condition Badge Overlay */}
+
+                {/* Condition Badge */}
                 {card.condition && (
                   <Badge
-                    className={`absolute top-2 right-2 text-xs px-3 py-1 rounded-full ${
-                      card.condition.toLowerCase() === 'mint' ? 'bg-green-500 text-white' :
-                      card.condition.toLowerCase() === 'near mint' ? 'bg-blue-500 text-white' :
-                      card.condition.toLowerCase() === 'lightly played' ? 'bg-purple-500 text-white' :
-                      card.condition.toLowerCase() === 'moderately played' ? 'bg-yellow-500 text-black' :
-                      card.condition.toLowerCase() === 'heavily played' ? 'bg-red-500 text-white' :
-                      'bg-gray-400 text-white'
-                    } shadow-lg`}
+                    className={`absolute top-3 right-3 text-xs px-3 py-1 rounded-full shadow-lg
+                      ${card.condition.toLowerCase() === 'mint' ? 'bg-green-500 text-white' :
+                        card.condition.toLowerCase() === 'near mint' ? 'bg-blue-500 text-white' :
+                        card.condition.toLowerCase() === 'lightly played' ? 'bg-purple-500 text-white' :
+                        card.condition.toLowerCase() === 'moderately played' ? 'bg-yellow-500 text-black' :
+                        card.condition.toLowerCase() === 'heavily played' ? 'bg-red-500 text-white' :
+                        'bg-gray-400 text-white'}`}
                   >
                     {card.condition}
                   </Badge>
                 )}
               </CardHeader>
-              
-              <CardContent className="p-3 space-y-1">
-                <CardTitle className="text-m font-bold text-gray-900 line-clamp-1">
+
+
+              <CardContent className="-mt-5 pb-2 px-3 space-y-1">
+                <CardTitle className="text-m font-bold text-gray-900 line-clamp-1 mt-1">
                   {card.name}
                 </CardTitle>
 
@@ -192,15 +179,9 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                     </div>
                   )}
                 </div>
-
-                {card.description && (
-                  <p className="text-xs text-gray-600 line-clamp-2 leading-tight">
-                    {card.description}
-                  </p>
-                )}
               </CardContent>
 
-              
+ 
               {/* Compact Footer */}
               <CardFooter className="p-2 pt-0">
                 <Button 

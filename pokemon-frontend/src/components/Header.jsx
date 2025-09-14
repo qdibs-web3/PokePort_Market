@@ -11,11 +11,12 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">P</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900">PokéMarket</span>
+          <Link to="/" className="flex items-center">
+            <img
+              src="/src/assets/plogo.png" // <-- replace with your actual PNG file path
+              alt="PokéPort Logo"
+              className="w-40 h-10 object-contain cursor-pointer hover:opacity-90 transition-opacity duration-200"
+            />
           </Link>
 
           {/* Navigation */}
@@ -26,7 +27,7 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
                 location.pathname === '/' ? 'text-blue-600 font-semibold' : ''
               }`}
             >
-              Marketplace
+              Market
             </Link>
             {user && (
               <Link 
@@ -93,7 +94,7 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
               location.pathname === '/' ? 'text-blue-600 font-semibold' : ''
             }`}
           >
-            Marketplace
+            Market
           </Link>
           {user && (
             <Link 
