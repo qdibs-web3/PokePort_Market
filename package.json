@@ -4,7 +4,7 @@
   "description": "A fullstack MERN Pokemon card marketplace with crypto payments",
   "main": "index.js",
   "scripts": {
-    "build": "cd pokemon-frontend && pnpm run build",
+    "build": "cd pokemon-frontend && pnpm install && pnpm run build",
     "dev": "concurrently \"cd api && npm run dev\" \"cd pokemon-frontend && pnpm run dev --host\"",
     "start": "cd api && npm start",
     "seed": "cd api && npm run seed"
