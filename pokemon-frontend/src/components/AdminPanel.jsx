@@ -32,6 +32,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
     description: '',
     price_eth: '',
     image_url: '',
+    image_urls: [''], // Add this for multiple images
     rarity: '',
     set_name: '',
     card_number: '',
@@ -72,11 +73,23 @@ const AdminPanel = ({ user, onCardUpdate }) => {
 
   const calculateAnalytics = (cardsData, ordersData) => {
     const totalCards = cardsData.length
-    const activeCards = cardsData.filter(card => card.is_active).length
+    const activeCards = cardsData.filter(card => card.is_active === true).length // Explicit boolean check
     const totalOrders = ordersData.length
-    const confirmedOrders = ordersData.filter(order => order.status === 'confirmed' || order.status === 'shipped' || order.status === 'delivered')
-    const totalRevenue = confirmedOrders.reduce((sum, order) => sum + order.total_price_eth, 0)
+    const confirmedOrders = ordersData.filter(order => 
+      order.status === 'confirmed' || 
+      order.status === 'shipped' || 
+      order.status === 'delivered'
+    )
+    const totalRevenue = confirmedOrders.reduce((sum, order) => {
+      return sum + (parseFloat(order.total_price_eth) || 0)
+    }, 0)
     const pendingOrders = ordersData.filter(order => order.status === 'pending').length
+
+    console.log('Analytics Debug:', { // Add debug logging
+      totalCards,
+      activeCards,
+      cardsData: cardsData.map(c => ({ name: c.name, is_active: c.is_active }))
+    })
 
     setAnalytics({
       totalCards,
@@ -87,6 +100,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
       pendingOrders
     })
   }
+
 
   const handleAddCard = async (e) => {
     e.preventDefault()
@@ -142,6 +156,42 @@ const AdminPanel = ({ user, onCardUpdate }) => {
       console.error('Error updating card:', error)
     }
   }
+
+  const handleEditCard = async (e) => {
+    e.preventDefault()
+    try {
+      const response = await fetch(`/api/cards/${editingCard.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editingCard.name,
+          description: editingCard.description,
+          price_eth: parseFloat(editingCard.price_eth),
+          image_url: editingCard.image_url,
+          rarity: editingCard.rarity,
+          set_name: editingCard.set_name,
+          condition: editingCard.condition,
+          stock_quantity: parseInt(editingCard.stock_quantity)
+        }),
+      })
+
+      if (response.ok) {
+        setEditingCard(null)
+        loadAdminData()
+        onCardUpdate()
+        alert('Card updated successfully!')
+      } else {
+        const errorData = await response.json()
+        alert('Failed to update card: ' + (errorData.error || 'Unknown error'))
+      }
+    } catch (error) {
+      console.error('Error updating card:', error)
+      alert('Error updating card: ' + error.message)
+    }
+  }
+
 
   const handleUpdateOrderStatus = async (orderId, status) => {
     try {
@@ -252,7 +302,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                     Add New Card
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Add New Pokemon Card</DialogTitle>
                     <DialogDescription>
@@ -260,6 +310,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleAddCard} className="space-y-4">
+                    {/* Add Card Form - keep existing form fields */}
                     <div>
                       <Label htmlFor="name">Card Name</Label>
                       <Input
@@ -331,8 +382,53 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         required
                       />
                     </div>
+
+                    {/* Replace the single image URL input with multiple image inputs */}
                     <div>
-                      <Label htmlFor="image_url">Image URL</Label>
+                      <Label htmlFor="image_urls">Image URLs</Label>
+                      <div className="space-y-2">
+                        {(newCard.image_urls || []).map((url, index) => (
+                          <div key={index} className="flex space-x-2">
+                            <Input
+                              type="url"
+                              value={url}
+                              onChange={(e) => {
+                                const newUrls = [...(newCard.image_urls || [])];
+                                newUrls[index] = e.target.value;
+                                setNewCard({...newCard, image_urls: newUrls});
+                              }}
+                              placeholder={`Image URL ${index + 1}`}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const newUrls = (newCard.image_urls || []).filter((_, i) => i !== index);
+                                setNewCard({...newCard, image_urls: newUrls});
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            const newUrls = [...(newCard.image_urls || []), ''];
+                            setNewCard({...newCard, image_urls: newUrls});
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Image URL
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Keep the single image URL for backward compatibility */}
+                    <div>
+                      <Label htmlFor="image_url">Primary Image URL (Legacy)</Label>
                       <Input
                         id="image_url"
                         type="url"
@@ -355,6 +451,117 @@ const AdminPanel = ({ user, onCardUpdate }) => {
               </Dialog>
             </div>
 
+            {/* Edit Card Dialog */}
+            <Dialog open={!!editingCard} onOpenChange={() => setEditingCard(null)}>
+              <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Edit Pokemon Card</DialogTitle>
+                  <DialogDescription>
+                    Update card information
+                  </DialogDescription>
+                </DialogHeader>
+                {editingCard && (
+                  <form onSubmit={(e) => handleEditCard(e)} className="space-y-4">
+                    <div>
+                      <Label htmlFor="edit-name">Card Name</Label>
+                      <Input
+                        id="edit-name"
+                        value={editingCard.name}
+                        onChange={(e) => setEditingCard({...editingCard, name: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-price">Price (ETH)</Label>
+                      <Input
+                        id="edit-price"
+                        type="number"
+                        step="0.001"
+                        value={editingCard.price_eth}
+                        onChange={(e) => setEditingCard({...editingCard, price_eth: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-rarity">Rarity</Label>
+                      <select
+                        id="edit-rarity"
+                        value={editingCard.rarity || ''}
+                        onChange={(e) => setEditingCard({...editingCard, rarity: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      >
+                        <option value="">Select Rarity</option>
+                        <option value="Common">Common</option>
+                        <option value="Uncommon">Uncommon</option>
+                        <option value="Rare">Rare</option>
+                        <option value="Ultra Rare">Ultra Rare</option>
+                        <option value="Legendary">Legendary</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-set">Set Name</Label>
+                      <Input
+                        id="edit-set"
+                        value={editingCard.set_name || ''}
+                        onChange={(e) => setEditingCard({...editingCard, set_name: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-condition">Condition</Label>
+                      <select
+                        id="edit-condition"
+                        value={editingCard.condition || ''}
+                        onChange={(e) => setEditingCard({...editingCard, condition: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      >
+                        <option value="">Select Condition</option>
+                        <option value="Mint">Mint</option>
+                        <option value="Near Mint">Near Mint</option>
+                        <option value="Lightly Played">Lightly Played</option>
+                        <option value="Moderately Played">Moderately Played</option>
+                        <option value="Heavily Played">Heavily Played</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-stock">Stock Quantity</Label>
+                      <Input
+                        id="edit-stock"
+                        type="number"
+                        min="0"
+                        value={editingCard.stock_quantity}
+                        onChange={(e) => setEditingCard({...editingCard, stock_quantity: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-image">Image URL</Label>
+                      <Input
+                        id="edit-image"
+                        type="url"
+                        value={editingCard.image_url || ''}
+                        onChange={(e) => setEditingCard({...editingCard, image_url: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-description">Description</Label>
+                      <Textarea
+                        id="edit-description"
+                        value={editingCard.description || ''}
+                        onChange={(e) => setEditingCard({...editingCard, description: e.target.value})}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button type="submit" className="flex-1">Update Card</Button>
+                      <Button type="button" variant="outline" onClick={() => setEditingCard(null)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </DialogContent>
+            </Dialog>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {cards.map((card) => (
                 <Card key={card.id} className={`${!card.is_active ? 'opacity-60' : ''}`}>
@@ -365,7 +572,26 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => setEditingCard({
+                            id: card.id,
+                            name: card.name,
+                            description: card.description,
+                            price_eth: card.price_eth,
+                            image_url: card.image_url,
+                            rarity: card.rarity,
+                            set_name: card.set_name,
+                            condition: card.condition,
+                            stock_quantity: card.stock_quantity
+                          })}
+                          title="Edit Card"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => toggleCardActive(card)}
+                          title={card.is_active ? "Hide Card" : "Show Card"}
                         >
                           {card.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                         </Button>

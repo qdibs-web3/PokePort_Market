@@ -28,14 +28,44 @@ module.exports = async (req, res) => {
   }
 };
 
+// Helper function to format card response with multiple images support
+function formatCardResponse(card) {
+  const allImages = [...(card.imageUrls || [])];
+  if (card.imageUrl && !allImages.includes(card.imageUrl)) {
+    allImages.unshift(card.imageUrl);
+  }
+  
+  return {
+    id: card._id,
+    name: card.name,
+    description: card.description,
+    price_eth: card.priceEth,
+    image_url: allImages[0] || card.imageUrl, // First image for backward compatibility
+    image_urls: allImages, // All images for carousel
+    rarity: card.rarity,
+    set_name: card.setName,
+    card_number: card.cardNumber,
+    condition: card.condition,
+    stock_quantity: card.stockQuantity,
+    is_active: card.isActive,
+    created_at: card.createdAt,
+    updated_at: card.updatedAt
+  };
+}
+
 async function getCards(req, res) {
   try {
-    const { page = 1, per_page = 20, rarity, set_name, q } = req.query;
+    const { page = 1, per_page = 20, rarity, set_name, q, include_inactive = false } = req.query;
     const pageNum = parseInt(page);
-    const perPage = parseInt(per_page);
+    const perPage = Math.min(parseInt(per_page), 100); // Limit to 100 per page
     const skip = (pageNum - 1) * perPage;
 
-    let query = { isActive: true };
+    let query = {};
+    
+    // Only show active cards by default, unless specifically requesting inactive ones
+    if (include_inactive !== 'true') {
+      query.isActive = true;
+    }
 
     if (rarity) {
       query.rarity = rarity;
@@ -57,22 +87,8 @@ async function getCards(req, res) {
     const total = await PokemonCard.countDocuments(query);
     const pages = Math.ceil(total / perPage);
 
-    // Convert to match frontend expectations
-    const formattedCards = cards.map(card => ({
-      id: card._id,
-      name: card.name,
-      description: card.description,
-      price_eth: card.priceEth,
-      image_url: card.imageUrl,
-      rarity: card.rarity,
-      set_name: card.setName,
-      card_number: card.cardNumber,
-      condition: card.condition,
-      stock_quantity: card.stockQuantity,
-      is_active: card.isActive,
-      created_at: card.createdAt,
-      updated_at: card.updatedAt
-    }));
+    // Format cards with multiple images support
+    const formattedCards = cards.map(formatCardResponse);
 
     return res.status(200).json({
       cards: formattedCards,
@@ -93,6 +109,7 @@ async function createCard(req, res) {
       description,
       price_eth,
       image_url,
+      image_urls,
       rarity,
       set_name,
       card_number,
@@ -100,40 +117,52 @@ async function createCard(req, res) {
       stock_quantity
     } = req.body;
 
+    // Validate required fields
+    if (!name || !price_eth) {
+      return res.status(400).json({ error: 'Name and price are required' });
+    }
+
+    if (price_eth <= 0) {
+      return res.status(400).json({ error: 'Price must be greater than 0' });
+    }
+
+    // Handle multiple images
+    let imageUrls = [];
+    if (image_urls && Array.isArray(image_urls)) {
+      imageUrls = image_urls.filter(url => url && url.trim() !== '');
+    }
+    
+    // Add single image_url to the array if provided and not already included
+    if (image_url && image_url.trim() !== '' && !imageUrls.includes(image_url)) {
+      imageUrls.unshift(image_url);
+    }
+
     const card = new PokemonCard({
-      name,
-      description,
-      priceEth: price_eth,
-      imageUrl: image_url,
+      name: name.trim(),
+      description: description?.trim(),
+      priceEth: parseFloat(price_eth),
+      imageUrl: image_url?.trim(), // Keep for backward compatibility
+      imageUrls: imageUrls, // New multiple images field
       rarity,
-      setName: set_name,
-      cardNumber: card_number,
+      setName: set_name?.trim(),
+      cardNumber: card_number?.trim(),
       condition,
-      stockQuantity: stock_quantity || 1
+      stockQuantity: parseInt(stock_quantity) || 1
     });
 
     await card.save();
 
-    const formattedCard = {
-      id: card._id,
-      name: card.name,
-      description: card.description,
-      price_eth: card.priceEth,
-      image_url: card.imageUrl,
-      rarity: card.rarity,
-      set_name: card.setName,
-      card_number: card.cardNumber,
-      condition: card.condition,
-      stock_quantity: card.stockQuantity,
-      is_active: card.isActive,
-      created_at: card.createdAt,
-      updated_at: card.updatedAt
-    };
+    const formattedCard = formatCardResponse(card);
 
     return res.status(201).json(formattedCard);
   } catch (error) {
     console.error('Create card error:', error);
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ error: 'Validation failed', details: validationErrors });
+    }
+    
     return res.status(500).json({ error: 'Failed to create card' });
   }
 }
-

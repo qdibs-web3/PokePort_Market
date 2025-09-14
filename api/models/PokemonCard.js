@@ -14,7 +14,11 @@ const pokemonCardSchema = new mongoose.Schema({
     min: 0
   },
   imageUrl: {
-    type: String
+    type: String  // Keep for backward compatibility
+  },
+  imageUrls: {
+    type: [String],  // New field for multiple images
+    default: []
   },
   rarity: {
     type: String,
@@ -43,5 +47,13 @@ const pokemonCardSchema = new mongoose.Schema({
   timestamps: true
 });
 
-module.exports = mongoose.models.PokemonCard || mongoose.model('PokemonCard', pokemonCardSchema);
+// Virtual to get all images (backward compatibility)
+pokemonCardSchema.virtual('allImages').get(function() {
+  const images = [...this.imageUrls];
+  if (this.imageUrl && !images.includes(this.imageUrl)) {
+    images.unshift(this.imageUrl);
+  }
+  return images.filter(Boolean);
+});
 
+module.exports = mongoose.models.PokemonCard || mongoose.model('PokemonCard', pokemonCardSchema);
