@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const connectToDatabase = require('./lib/mongodb');
 const User = require('./models/User');
 const PokemonCard = require('./models/PokemonCard');
+require('dotenv').config();
+
 
 const sampleCards = [
   {
@@ -99,13 +101,13 @@ async function seedDatabase() {
     await connectToDatabase();
     
     // Create admin user
-    const adminWallet = '0x742d35Cc6634C0532925a3b8D4C9db96C4b5Da5A';
+    const adminWallet = process.env.ADMIN_WALLET_ADDRESS || '0xf08d3184c50a1B255507785F71c9330034852Cd5';
     let adminUser = await User.findOne({ walletAddress: adminWallet.toLowerCase() });
     
     if (!adminUser) {
       adminUser = new User({
         walletAddress: adminWallet.toLowerCase(),
-        username: '0x742d...5Da5A',
+        username: '0xf08d...2cd5',
         isAdmin: true
       });
       await adminUser.save();

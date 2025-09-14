@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 
 // Use MongoDB Atlas free tier or local fallback
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://demo:demo@cluster0.mongodb.net/pokemon-marketplace?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable');
+  throw new Error('Please define the MONGODB_URI environment variable in api/.env');
 }
 
 let cached = global.mongoose;
