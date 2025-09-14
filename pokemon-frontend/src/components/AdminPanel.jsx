@@ -473,7 +473,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                 <div>
                   <Label>Admin Wallet Address</Label>
                   <Input 
-                    value="0x742d35Cc6634C0532925a3b8D4C9db96C4b5Da5A" 
+                    value="0xf08d3184c50a1B255507785F71c9330034852Cd5" 
                     readOnly 
                     className="font-mono text-sm"
                   />
