@@ -16,6 +16,10 @@ module.exports = async (req, res) => {
 
     const { id } = req.query;
 
+    if (!id) {
+      return res.status(400).json({ error: 'Card ID is required' });
+    }
+
     switch (req.method) {
       case 'GET':
         return await getCard(req, res, id);
@@ -81,14 +85,16 @@ async function updateCard(req, res, id) {
     const updateData = {};
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
-    if (price_eth !== undefined) updateData.priceEth = price_eth;
+    if (price_eth !== undefined) updateData.priceEth = parseFloat(price_eth);
     if (image_url !== undefined) updateData.imageUrl = image_url;
     if (rarity !== undefined) updateData.rarity = rarity;
     if (set_name !== undefined) updateData.setName = set_name;
     if (card_number !== undefined) updateData.cardNumber = card_number;
     if (condition !== undefined) updateData.condition = condition;
-    if (stock_quantity !== undefined) updateData.stockQuantity = stock_quantity;
+    if (stock_quantity !== undefined) updateData.stockQuantity = parseInt(stock_quantity);
     if (is_active !== undefined) updateData.isActive = is_active;
+
+    updateData.updatedAt = new Date();
 
     const card = await PokemonCard.findByIdAndUpdate(id, updateData, { new: true });
     
@@ -121,20 +127,18 @@ async function updateCard(req, res, id) {
 
 async function deleteCard(req, res, id) {
   try {
-    const card = await PokemonCard.findByIdAndUpdate(
-      id, 
-      { isActive: false }, 
-      { new: true }
-    );
-    
+    // Check if card exists
+    const card = await PokemonCard.findById(id);
     if (!card) {
       return res.status(404).json({ error: 'Card not found' });
     }
 
-    return res.status(204).end();
+    // Actually delete the card from database
+    await PokemonCard.findByIdAndDelete(id);
+
+    return res.status(200).json({ message: 'Card deleted successfully' });
   } catch (error) {
     console.error('Delete card error:', error);
     return res.status(500).json({ error: 'Failed to delete card' });
   }
 }
-

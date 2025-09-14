@@ -157,6 +157,38 @@ const AdminPanel = ({ user, onCardUpdate }) => {
     }
   }
 
+  const handleDeleteCard = async (cardId, cardName) => {
+    if (!confirm(`Are you sure you want to permanently delete "${cardName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      console.log('Deleting card:', cardId); // Debug log
+      
+      const response = await fetch(`/api/cards/${cardId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        alert('Card deleted successfully!');
+        loadAdminData();
+        onCardUpdate();
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to delete card:', errorData);
+        alert('Failed to delete card: ' + (errorData.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error deleting card:', error);
+      alert('Error deleting card: ' + error.message);
+    }
+  };
+
+
+
   const handleEditCard = async (e) => {
     e.preventDefault()
     try {
@@ -195,21 +227,30 @@ const AdminPanel = ({ user, onCardUpdate }) => {
 
   const handleUpdateOrderStatus = async (orderId, status) => {
     try {
+      console.log('Updating order status:', { orderId, status }); // Debug log
+      
       const response = await fetch(`/api/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ status }),
-      })
+      });
 
       if (response.ok) {
-        loadAdminData()
+        console.log('Order status updated successfully'); // Debug log
+        loadAdminData(); // Reload data to reflect changes
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to update order status:', errorData);
+        alert('Failed to update order status: ' + (errorData.error || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Error updating order status:', error)
+      console.error('Error updating order status:', error);
+      alert('Error updating order status: ' + error.message);
     }
-  }
+  };
+
 
   const toggleCardActive = (card) => {
     handleUpdateCard(card.id, { is_active: !card.is_active })
@@ -595,6 +636,14 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         >
                           {card.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteCard(card.id, card.name)}
+                          title="Delete Card Permanently"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
                     <div className="flex space-x-2">
@@ -635,7 +684,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                           {new Date(order.created_at).toLocaleDateString()}
                         </p>
                         <p className="text-sm text-gray-600">
-                          Customer: {order.user?.username}
+                          Customer: {order.user?.username || 'Unknown'}
                         </p>
                       </div>
                       <div className="text-right">
@@ -643,7 +692,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         <select
                           value={order.status}
                           onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                          className="mt-2 px-2 py-1 border border-gray-300 rounded text-sm"
+                          className="mt-2 px-3 py-1 border border-gray-300 rounded-md text-sm"
                         >
                           <option value="pending">Pending</option>
                           <option value="confirmed">Confirmed</option>
@@ -654,31 +703,17 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                       </div>
                     </div>
                     
-                    {order.card && (
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-20 bg-gray-100 rounded flex items-center justify-center">
-                          {order.card.image_url ? (
-                            <img 
-                              src={order.card.image_url} 
-                              alt={order.card.name}
-                              className="w-full h-full object-cover rounded"
-                            />
-                          ) : (
-                            <Package className="w-6 h-6 text-gray-400" />
-                          )}
-                        </div>
-                        <div>
-                          <h4 className="font-medium">{order.card.name}</h4>
-                          <p className="text-sm text-gray-600">Quantity: {order.quantity}</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {order.transaction_hash && (
-                      <div className="mt-4 text-xs text-gray-500 font-mono bg-gray-50 p-2 rounded">
-                        TX: {order.transaction_hash}
-                      </div>
-                    )}
+                    <div className="text-sm text-gray-600">
+                      {order.card && (
+                        <p><span className="font-medium">Card:</span> {order.card.name}</p>
+                      )}
+                      <p><span className="font-medium">Quantity:</span> {order.quantity}</p>
+                      {order.transaction_hash && (
+                        <p><span className="font-medium">TX Hash:</span> 
+                          <span className="font-mono text-xs">{order.transaction_hash.slice(0, 10)}...</span>
+                        </p>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}

@@ -87,12 +87,18 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
 
   const getRarityColor = (rarity) => {
     switch (rarity?.toLowerCase()) {
-      case 'common': return 'bg-gray-100 text-gray-800'
-      case 'uncommon': return 'bg-green-100 text-green-800'
-      case 'rare': return 'bg-blue-100 text-blue-800'
-      case 'ultra rare': return 'bg-purple-100 text-purple-800'
-      case 'legendary': return 'bg-yellow-100 text-yellow-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'common': 
+        return 'bg-gray-500 text-white border-gray-600'
+      case 'uncommon': 
+        return 'bg-green-500 text-white border-green-600'
+      case 'rare': 
+        return 'bg-blue-500 text-white border-blue-600'
+      case 'ultra rare': 
+        return 'bg-purple-500 text-white border-purple-600'
+      case 'legendary': 
+        return 'bg-yellow-500 text-black border-yellow-600'
+      default: 
+        return 'bg-gray-400 text-white border-gray-500'
     }
   }
 
@@ -139,25 +145,26 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
           <p className="text-gray-600">Try adjusting your search or filters</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {filteredCards.map((card) => (
-            <Card key={card.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 max-w-sm">
+            <Card key={card.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 bg-white border border-gray-200 hover:border-blue-300 max-w-xs mx-auto">
+              {/* Compact Image Section */}
               <CardHeader className="p-0">
-                <div className="aspect-[3/4] bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center relative overflow-hidden">
+                <div className="aspect-[4/3] bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center relative overflow-hidden">
                   {card.image_urls && card.image_urls.length > 0 ? (
                     <>
                       <img 
                         src={card.image_urls[currentImageIndex[card.id] || 0]} 
                         alt={card.name}
-                        className="w-full h-full object-contain p-2"
+                        className="w-full h-full object-cover"
                       />
                       {card.image_urls.length > 1 && (
                         <>
-                          {/* Previous button */}
+                          {/* Compact Navigation Buttons */}
                           <Button
                             size="sm"
                             variant="outline"
-                            className="absolute left-2 top-1/2 transform -translate-y-1/2 w-8 h-8 p-0 bg-white/80 hover:bg-white"
+                            className="absolute left-1 top-1/2 transform -translate-y-1/2 w-6 h-6 p-0 bg-white/90 hover:bg-white border-0 shadow-md"
                             onClick={(e) => {
                               e.stopPropagation();
                               const currentIndex = currentImageIndex[card.id] || 0;
@@ -165,14 +172,13 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                               setCurrentImageIndex(prev => ({...prev, [card.id]: newIndex}));
                             }}
                           >
-                            ‹
+                            <span className="text-xs font-bold">‹</span>
                           </Button>
                           
-                          {/* Next button */}
                           <Button
                             size="sm"
                             variant="outline"
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 p-0 bg-white/80 hover:bg-white"
+                            className="absolute right-1 top-1/2 transform -translate-y-1/2 w-6 h-6 p-0 bg-white/90 hover:bg-white border-0 shadow-md"
                             onClick={(e) => {
                               e.stopPropagation();
                               const currentIndex = currentImageIndex[card.id] || 0;
@@ -180,18 +186,18 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                               setCurrentImageIndex(prev => ({...prev, [card.id]: newIndex}));
                             }}
                           >
-                            ›
+                            <span className="text-xs font-bold">›</span>
                           </Button>
                           
-                          {/* Image indicators */}
-                          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                          {/* Compact Image Indicators */}
+                          <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex space-x-1">
                             {card.image_urls.map((_, index) => (
                               <div
                                 key={index}
-                                className={`w-2 h-2 rounded-full ${
+                                className={`w-1.5 h-1.5 rounded-full ${
                                   index === (currentImageIndex[card.id] || 0) 
-                                    ? 'bg-white' 
-                                    : 'bg-white/50'
+                                    ? 'bg-white shadow-md' 
+                                    : 'bg-white/60'
                                 }`}
                               />
                             ))}
@@ -203,65 +209,83 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                     <img 
                       src={card.image_url} 
                       alt={card.name}
-                      className="w-full h-full object-contain p-2"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="text-center p-4">
-                      <Star className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <div className="text-center p-3">
+                      <Star className="w-6 h-6 text-gray-400 mx-auto mb-1" />
                       <p className="text-xs text-gray-500">No image</p>
                     </div>
                   )}
-                </div>
-              </CardHeader>
-              
-              <CardContent className="p-3"> {/* Reduced padding from p-4 to p-3 */}
-                <div className="flex items-start justify-between mb-2">
-                  <CardTitle className="text-base font-bold text-gray-900 line-clamp-1"> {/* Reduced from text-lg */}
-                    {card.name}
-                  </CardTitle>
+                  
+                  {/* Rarity Badge Overlay */}
                   {card.rarity && (
-                    <Badge className={`text-xs ${getRarityColor(card.rarity)}`}>
+                    <Badge className={`absolute top-2 right-2 text-xs px-2 py-1 ${getRarityColor(card.rarity)} shadow-md`}>
                       {card.rarity}
                     </Badge>
                   )}
                 </div>
-                
-                {card.description && (
-                  <CardDescription className="text-xs text-gray-600 mb-2 line-clamp-2"> {/* Reduced text size and margin */}
-                    {card.description}
-                  </CardDescription>
-                )}
-                
-                <div className="space-y-1 text-xs text-gray-600"> {/* Reduced text size */}
-                  {card.set_name && <p><span className="font-medium">Set:</span> {card.set_name}</p>}
-                  {card.condition && <p><span className="font-medium">Condition:</span> {card.condition}</p>}
-                  <p><span className="font-medium">Stock:</span> {card.stock_quantity}</p>
+              </CardHeader>
+              
+              {/* Compact Content Section */}
+              <CardContent className="p-3 space-y-2">
+                {/* Title and Price Row */}
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-sm font-bold text-gray-900 line-clamp-1 flex-1">
+                    {card.name}
+                  </CardTitle>
+                  <span className="text-lg font-bold text-blue-600 whitespace-nowrap">
+                    {card.price_eth} ETH
+                  </span>
                 </div>
+                
+                {/* Compact Info Grid */}
+                <div className="grid grid-cols-2 gap-1 text-xs text-gray-600">
+                  {card.set_name && (
+                    <div className="truncate">
+                      <span className="font-medium">Set:</span> {card.set_name}
+                    </div>
+                  )}
+                  {card.condition && (
+                    <div className="truncate">
+                      <span className="font-medium">Condition:</span> {card.condition}
+                    </div>
+                  )}
+                  <div>
+                    <span className="font-medium">Stock:</span> {card.stock_quantity}
+                  </div>
+                  {card.card_number && (
+                    <div className="truncate">
+                      <span className="font-medium">#</span>{card.card_number}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Description - Only if exists and space allows */}
+                {card.description && (
+                  <p className="text-xs text-gray-600 line-clamp-2 leading-tight">
+                    {card.description}
+                  </p>
+                )}
               </CardContent>
               
-              <CardFooter className="p-3 pt-0"> {/* Reduced padding */}
-                <div className="w-full space-y-2"> {/* Reduced space */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold text-blue-600"> {/* Reduced from text-2xl */}
-                      {card.price_eth} ETH
-                    </span>
-                  </div>
-                  
-                  <Button 
-                    onClick={() => handlePurchase(card)}
-                    disabled={!user || purchasing === card.id || card.stock_quantity === 0}
-                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-sm py-2" // Reduced text size and padding
-                  >
-                    <ShoppingCart className="w-3 h-3 mr-2" /> {/* Reduced icon size */}
-                    {purchasing === card.id ? 'Processing...' : 
-                    !user ? 'Connect Wallet' : 
-                    card.stock_quantity === 0 ? 'Out of Stock' : 'Buy Now'}
-                  </Button>
-                </div>
+              {/* Compact Footer */}
+              <CardFooter className="p-3 pt-0">
+                <Button 
+                  onClick={() => handlePurchase(card)}
+                  disabled={!user || purchasing === card.id || card.stock_quantity === 0}
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-sm py-2 h-8 transition-all duration-200"
+                >
+                  <ShoppingCart className="w-3 h-3 mr-1" />
+                  {purchasing === card.id ? 'Processing...' : 
+                  !user ? 'Connect Wallet' : 
+                  card.stock_quantity === 0 ? 'Out of Stock' : 'Buy Now'}
+                </Button>
               </CardFooter>
             </Card>
           ))}
         </div>
+
       )}
     </div>
   )

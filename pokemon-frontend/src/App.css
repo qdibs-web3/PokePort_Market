@@ -118,3 +118,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Add to your CSS file for even better responsive behavior */
+@media (min-width: 1536px) {
+  .grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-3.xl\\:grid-cols-4.\\32xl\\:grid-cols-5 {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+/* Ensure cards don't get too wide */
+.max-w-xs {
+  max-width: 280px;
+}
+
+/* Smooth hover animations */
+.hover\\:shadow-xl:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
