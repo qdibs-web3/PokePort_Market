@@ -1,0 +1,32 @@
+{
+  "name": "pokemon-marketplace",
+  "version": "1.0.0",
+  "description": "A fullstack MERN Pokemon card marketplace with crypto payments",
+  "main": "index.js",
+  "scripts": {
+    "build": "cd pokemon-frontend && pnpm install && pnpm run build",
+    "dev": "concurrently \"cd api && npm run dev\" \"cd pokemon-frontend && pnpm run dev --host\"",
+    "start": "cd api && npm start",
+    "seed": "cd api && npm run seed"
+  },
+  "keywords": [
+    "pokemon",
+    "marketplace",
+    "mern",
+    "crypto",
+    "web3",
+    "ethereum",
+    "trading-cards"
+  ],
+  "author": "Pokemon Marketplace Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "mongodb": "^6.19.0"
+  }
+}
