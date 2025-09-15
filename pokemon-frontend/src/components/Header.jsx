@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Wallet, User, Settings, ShoppingCart } from 'lucide-react'
+import plogo from '/src/assets/plogo.png';
 
 const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => {
   const location = useLocation()
@@ -13,7 +14,7 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img
-              src="/src/assets/plogo.png" // <-- replace with your actual PNG file path
+              src={plogo} 
               alt="PokéPort Logo"
               className="w-40 h-10 object-contain cursor-pointer hover:opacity-90 transition-opacity duration-200"
             />
