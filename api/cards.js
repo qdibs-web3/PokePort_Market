@@ -1,5 +1,5 @@
-const connectToDatabase = require('./lib/mongodb');
-const PokemonCard = require('./models/PokemonCard');
+const connectToDatabase = require('./_lib/mongodb');
+const PokemonCard = require('./_models/PokemonCard');
 
 module.exports = async (req, res) => {
   // Enable CORS

@@ -1,5 +1,5 @@
-const connectToDatabase = require('../../lib/mongodb');
-const Order = require('../../models/Order');
+const connectToDatabase = require('../../_lib/mongodb');
+const Order = require('../../_models/Order');
 
 module.exports = async (req, res) => {
   // Enable CORS
