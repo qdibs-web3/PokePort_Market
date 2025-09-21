@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { Search, ShoppingCart, Star, Package } from 'lucide-react'
+import { useCart } from '../contexts/CartContext'
 
 const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedRarity, setSelectedRarity] = useState('')
-  const [purchasing, setPurchasing] = useState(null)
   const [currentImageIndex, setCurrentImageIndex] = useState({});
-
+  const { addToCart } = useCart()
 
   // Filter cards based on search and rarity
   const filteredCards = cards.filter(card => {
@@ -22,67 +22,15 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
   // Get unique rarities for filter
   const rarities = [...new Set(cards.map(card => card.rarity).filter(Boolean))]
 
-  // Replace the existing handlePurchase function (around line 25)
-  const handlePurchase = async (card) => {
+  // Handle adding card to cart
+  const handleAddToCart = (card) => {
     if (!user) {
-      alert('Please connect your wallet to purchase cards!')
+      alert('Please connect your wallet to add cards to cart!')
       return
     }
 
-    setPurchasing(card.id)
-    try {
-      // Create order with correct field names
-      const orderResponse = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          card_id: card.id,  // This matches the backend expectation
-          quantity: 1,
-          buyer_wallet_address: user.wallet_address, // This matches the backend expectation
-        }),
-      })
-
-      if (!orderResponse.ok) {
-        const errorData = await orderResponse.json()
-        throw new Error(errorData.error || 'Failed to create order')
-      }
-
-      const order = await orderResponse.json()
-
-      // Request payment through MetaMask with proper admin wallet
-      const adminWallet = process.env.REACT_APP_ADMIN_WALLET || '0xf08d3184c50a1B255507785F71c9330034852Cd5'
-      
-      const transactionParameters = {
-        to: adminWallet,
-        from: user.wallet_address,
-        value: '0x' + (card.price_eth * Math.pow(10, 18)).toString(16), // Convert ETH to Wei in hex
-        gas: '0x5208', // 21000 in hex
-      }
-
-      const txHash = await window.ethereum.request({
-        method: 'eth_sendTransaction',
-        params: [transactionParameters],
-      })
-
-      // Confirm order with transaction hash
-      await fetch(`/api/orders/${order.id}/confirm`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ transaction_hash: txHash }),
-      })
-
-      alert('Purchase successful! Transaction hash: ' + txHash)
-      onCardPurchase() // Refresh cards
-    } catch (error) {
-      console.error('Purchase error:', error)
-      alert('Purchase failed: ' + error.message)
-    } finally {
-      setPurchasing(null)
-    }
+    addToCart(card)
+    alert(`${card.name} added to cart!`)
   }
 
   if (loading) {
@@ -185,17 +133,16 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
               {/* Compact Footer */}
               <CardFooter className="p-2 pt-0">
                 <Button 
-                  onClick={() => handlePurchase(card)}
-                  disabled={!user || purchasing === card.id || card.stock_quantity === 0}
+                  onClick={() => handleAddToCart(card)}
+                  disabled={!user || card.stock_quantity === 0}
                   className="w-full bg-gradient-to-r from-blue-500 via-purple-600 to-pink-500 
                             hover:from-blue-600 hover:via-purple-700 hover:to-pink-600 
                             text-white font-semibold py-2 h-10 rounded-xl shadow-lg 
                             transition-all duration-300 flex items-center justify-center gap-1"
                 >
                   <ShoppingCart className="w-3 h-3 mr-1" />
-                  {purchasing === card.id ? 'Processing...' : 
-                  !user ? 'Connect Wallet' : 
-                  card.stock_quantity === 0 ? 'Out of Stock' : 'Buy Now'}
+                  {!user ? 'Connect Wallet' : 
+                  card.stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
                 </Button>
               </CardFooter>
             </Card>
@@ -208,4 +155,3 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
 }
 
 export default CardGrid
-

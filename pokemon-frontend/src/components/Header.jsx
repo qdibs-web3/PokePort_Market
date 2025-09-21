@@ -2,10 +2,13 @@ import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Wallet, User, Settings, ShoppingCart } from 'lucide-react'
+import { useCart } from '../contexts/CartContext'
 import plogo from '/src/assets/plogo.png';
 
 const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => {
   const location = useLocation()
+  const { getTotalItems } = useCart()
+  const cartItemCount = getTotalItems()
 
   return (
     <header className="bg-white shadow-lg border-b">
@@ -54,6 +57,18 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
 
           {/* Wallet Connection */}
           <div className="flex items-center space-x-4">
+            {user && (
+              <Link to="/account" className="relative">
+                <Button variant="outline" size="sm" className="relative">
+                  <ShoppingCart className="w-4 h-4" />
+                  {cartItemCount > 0 && (
+                    <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[20px] h-5 flex items-center justify-center rounded-full">
+                      {cartItemCount}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
+            )}
             {user ? (
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2">
@@ -124,4 +139,3 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
 }
 
 export default Header
-

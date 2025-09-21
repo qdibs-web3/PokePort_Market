@@ -2,12 +2,30 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Button } from '@/components/ui/button.jsx'
+import { Input } from '@/components/ui/input.jsx'
+import { Label } from '@/components/ui/label.jsx'
+import { Textarea } from '@/components/ui/textarea.jsx'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.jsx'
-import { User, Package, Clock, CheckCircle, Truck, XCircle } from 'lucide-react'
+import { User, Package, Clock, CheckCircle, Truck, XCircle, ShoppingCart, Trash2, Plus, Minus } from 'lucide-react'
+import { useCart } from '../contexts/CartContext'
 
 const UserAccount = ({ user }) => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const { items, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart()
+  
+  // Checkout form state
+  const [checkoutForm, setCheckoutForm] = useState({
+    name: '',
+    email: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: '',
+    phone: ''
+  })
 
   useEffect(() => {
     if (user) {
@@ -26,6 +44,111 @@ const UserAccount = ({ user }) => {
       console.error('Error loading orders:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleCheckout = async (e) => {
+    e.preventDefault()
+    
+    if (items.length === 0) {
+      alert('Your cart is empty!')
+      return
+    }
+
+    if (!checkoutForm.name || !checkoutForm.email || !checkoutForm.address) {
+      alert('Please fill in all required fields!')
+      return
+    }
+
+    setCheckoutLoading(true)
+    
+    try {
+      // Create orders for each item in cart
+      const orderPromises = items.map(async (item) => {
+        const orderResponse = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            card_id: item.id,
+            quantity: item.quantity,
+            buyer_wallet_address: user.wallet_address,
+          }),
+        })
+
+        if (!orderResponse.ok) {
+          const errorData = await orderResponse.json()
+          throw new Error(errorData.error || 'Failed to create order')
+        }
+
+        return await orderResponse.json()
+      })
+
+      const orders = await Promise.all(orderPromises)
+      const totalPrice = getTotalPrice()
+
+      // Request payment through MetaMask
+      const adminWallet = '0xf08d3184c50a1B255507785F71c9330034852Cd5'
+      
+      const transactionParameters = {
+        to: adminWallet,
+        from: user.wallet_address,
+        value: '0x' + (totalPrice * Math.pow(10, 18)).toString(16), // Convert ETH to Wei in hex
+        gas: '0x5208', // 21000 in hex
+      }
+
+      const txHash = await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [transactionParameters],
+      })
+
+      // Confirm all orders with transaction hash
+      await Promise.all(orders.map(order => 
+        fetch(`/api/orders/${order.id}/confirm`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            transaction_hash: txHash,
+            customer_info: checkoutForm
+          }),
+        })
+      ))
+
+      // Send email notification to admin
+      await fetch('/api/orders/notify-admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orders,
+          customer_info: checkoutForm,
+          transaction_hash: txHash,
+          total_price_eth: totalPrice
+        }),
+      })
+
+      alert('Purchase successful! Transaction hash: ' + txHash)
+      clearCart()
+      setCheckoutForm({
+        name: '',
+        email: '',
+        address: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        country: '',
+        phone: ''
+      })
+      loadUserOrders() // Refresh orders
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('Checkout failed: ' + error.message)
+    } finally {
+      setCheckoutLoading(false)
     }
   }
 
@@ -79,8 +202,10 @@ const UserAccount = ({ user }) => {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="cart">Cart ({items.length})</TabsTrigger>
+          <TabsTrigger value="checkout">Checkout</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
         </TabsList>
 
@@ -127,6 +252,216 @@ const UserAccount = ({ user }) => {
                   <label className="text-sm font-medium text-gray-700">Last Login</label>
                   <p className="text-gray-900">{formatDate(user.last_login)}</p>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="cart">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <ShoppingCart className="w-5 h-5" />
+                <span>Shopping Cart</span>
+              </CardTitle>
+              <CardDescription>
+                Review items in your cart before checkout
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {items.length === 0 ? (
+                <div className="text-center py-8">
+                  <ShoppingCart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Your cart is empty</h3>
+                  <p className="text-gray-600">Add some cards to get started!</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {items.map((item) => (
+                    <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg">
+                      <div className="w-16 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded flex items-center justify-center">
+                        {item.image_url ? (
+                          <img 
+                            src={item.image_url} 
+                            alt={item.name}
+                            className="w-full h-full object-cover rounded"
+                          />
+                        ) : (
+                          <Package className="w-6 h-6 text-gray-400" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900">{item.name}</h4>
+                        <p className="text-sm text-gray-600">{item.price_eth} ETH each</p>
+                        <p className="text-sm text-gray-600">{item.set_name} • {item.condition}</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          disabled={item.quantity <= 1}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="w-8 text-center">{item.quantity}</span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          disabled={item.quantity >= item.stock_quantity}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-blue-600">
+                          {(item.price_eth * item.quantity).toFixed(4)} ETH
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => removeFromCart(item.id)}
+                          className="mt-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between items-center text-lg font-semibold">
+                      <span>Total:</span>
+                      <span className="text-blue-600">{getTotalPrice().toFixed(4)} ETH</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="checkout">
+          <Card>
+            <CardHeader>
+              <CardTitle>Checkout</CardTitle>
+              <CardDescription>
+                Complete your purchase with shipping information
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {items.length === 0 ? (
+                <div className="text-center py-8">
+                  <ShoppingCart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Your cart is empty</h3>
+                  <p className="text-gray-600">Add items to your cart before checkout!</p>
+                </div>
+              ) : (
+                <form onSubmit={handleCheckout} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name">Full Name *</Label>
+                      <Input
+                        id="name"
+                        value={checkoutForm.name}
+                        onChange={(e) => setCheckoutForm({...checkoutForm, name: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={checkoutForm.email}
+                        onChange={(e) => setCheckoutForm({...checkoutForm, email: e.target.value})}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="address">Shipping Address *</Label>
+                    <Textarea
+                      id="address"
+                      value={checkoutForm.address}
+                      onChange={(e) => setCheckoutForm({...checkoutForm, address: e.target.value})}
+                      required
+                      rows={3}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        value={checkoutForm.city}
+                        onChange={(e) => setCheckoutForm({...checkoutForm, city: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="state">State/Province</Label>
+                      <Input
+                        id="state"
+                        value={checkoutForm.state}
+                        onChange={(e) => setCheckoutForm({...checkoutForm, state: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="zipCode">ZIP/Postal Code</Label>
+                      <Input
+                        id="zipCode"
+                        value={checkoutForm.zipCode}
+                        onChange={(e) => setCheckoutForm({...checkoutForm, zipCode: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="country">Country</Label>
+                      <Input
+                        id="country"
+                        value={checkoutForm.country}
+                        onChange={(e) => setCheckoutForm({...checkoutForm, country: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Phone Number (Optional)</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={checkoutForm.phone}
+                        onChange={(e) => setCheckoutForm({...checkoutForm, phone: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                      <h4 className="font-semibold mb-2">Order Summary</h4>
+                      {items.map((item) => (
+                        <div key={item.id} className="flex justify-between text-sm mb-1">
+                          <span>{item.name} x{item.quantity}</span>
+                          <span>{(item.price_eth * item.quantity).toFixed(4)} ETH</span>
+                        </div>
+                      ))}
+                      <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
+                        <span>Total:</span>
+                        <span className="text-blue-600">{getTotalPrice().toFixed(4)} ETH</span>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-600"
+                      disabled={checkoutLoading}
+                    >
+                      {checkoutLoading ? 'Processing...' : `Pay ${getTotalPrice().toFixed(4)} ETH`}
+                    </Button>
+                  </div>
+                </form>
               )}
             </CardContent>
           </Card>
@@ -219,4 +554,3 @@ const UserAccount = ({ user }) => {
 }
 
 export default UserAccount
-

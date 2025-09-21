@@ -48,17 +48,20 @@ const AdminPanel = ({ user, onCardUpdate }) => {
 
   const loadAdminData = async () => {
     try {
+      let cardsData = { cards: [] }
+      let ordersData = { orders: [] }
+
       // Load all cards (including inactive)
       const cardsResponse = await fetch('/api/cards')
       if (cardsResponse.ok) {
-        const cardsData = await cardsResponse.json()
+        cardsData = await cardsResponse.json()
         setCards(cardsData.cards || [])
       }
 
       // Load all orders
       const ordersResponse = await fetch('/api/orders')
       if (ordersResponse.ok) {
-        const ordersData = await ordersResponse.json()
+        ordersData = await ordersResponse.json()
         setOrders(ordersData.orders || [])
       }
 
@@ -752,4 +755,3 @@ const AdminPanel = ({ user, onCardUpdate }) => {
 }
 
 export default AdminPanel
-

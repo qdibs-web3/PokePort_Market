@@ -48,6 +48,17 @@ app.post('/api/orders/:id/confirm', (req, res) => {
   return handler(req, res);
 });
 
+app.put('/api/orders/:id/status', (req, res) => {
+  const handler = require('./orders/[id]/status');
+  req.query.id = req.params.id;
+  return handler(req, res);
+});
+
+app.post('/api/orders/notify-admin', (req, res) => {
+  const handler = require('./orders/notify-admin');
+  return handler(req, res);
+});
+
 app.get('/api/orders/user/:wallet_address', (req, res) => {
   const handler = require('./orders/user/[wallet_address]');
   req.query.wallet_address = req.params.wallet_address;
@@ -66,10 +77,12 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('  POST /api/cards');
   console.log('  GET  /api/cards/:id');
   console.log('  PUT  /api/cards/:id');
+  console.log('  DELETE /api/cards/:id');
   console.log('  POST /api/users/auth');
   console.log('  GET  /api/orders');
   console.log('  POST /api/orders');
   console.log('  POST /api/orders/:id/confirm');
+  console.log('  PUT  /api/orders/:id/status');
+  console.log('  POST /api/orders/notify-admin');
   console.log('  GET  /api/orders/user/:wallet_address');
 });
-

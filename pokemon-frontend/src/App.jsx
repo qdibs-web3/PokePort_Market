@@ -12,6 +12,7 @@ import Header from './components/Header'
 import CardGrid from './components/CardGrid'
 import UserAccount from './components/UserAccount'
 import AdminPanel from './components/AdminPanel'
+import { CartProvider } from './contexts/CartContext'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -87,48 +88,50 @@ function App() {
   }, [])
 
   return (
-    <Router>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-        <Header 
-          user={user} 
-          onConnectWallet={connectWallet} 
-          onDisconnectWallet={disconnectWallet}
-          isConnecting={isConnecting}
-        />
-        
-        <main className="container mx-auto px-4 py-8">
-          <Routes>
-            <Route path="/" element={
-              <div>
-                <div className="text-center mb-8">
-                  <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                    Pokemon Market
-                  </h1>
-                  <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                    Discover and collect authentic Pokemon cards via crypto. 
-                  </p>
+    <CartProvider>
+      <Router>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+          <Header 
+            user={user} 
+            onConnectWallet={connectWallet} 
+            onDisconnectWallet={disconnectWallet}
+            isConnecting={isConnecting}
+          />
+          
+          <main className="container mx-auto px-4 py-8">
+            <Routes>
+              <Route path="/" element={
+                <div>
+                  <div className="text-center mb-8">
+                    <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                      Pokemon Market
+                    </h1>
+                    <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                      Discover and collect authentic Pokemon cards via crypto. 
+                    </p>
+                  </div>
+                  
+                  <CardGrid 
+                    cards={cards} 
+                    loading={loading} 
+                    user={user}
+                    onCardPurchase={loadCards}
+                  />
                 </div>
-                
-                <CardGrid 
-                  cards={cards} 
-                  loading={loading} 
-                  user={user}
-                  onCardPurchase={loadCards}
-                />
-              </div>
-            } />
-            
-            <Route path="/account" element={
-              <UserAccount user={user} />
-            } />
-            
-            <Route path="/admin" element={
-              <AdminPanel user={user} onCardUpdate={loadCards} />
-            } />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+              } />
+              
+              <Route path="/account" element={
+                <UserAccount user={user} />
+              } />
+              
+              <Route path="/admin" element={
+                <AdminPanel user={user} onCardUpdate={loadCards} />
+              } />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    </CartProvider>
   )
 }
 
