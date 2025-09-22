@@ -31,6 +31,14 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
                 location.pathname === '/' ? 'text-blue-600 font-semibold' : ''
               }`}
             >
+              Explore
+            </Link>
+            <Link 
+              to="/market" 
+              className={`text-gray-600 hover:text-gray-900 transition-colors ${
+                location.pathname === '/' ? 'text-blue-600 font-semibold' : ''
+              }`}
+            >
               Market
             </Link>
             {user && (

@@ -12,6 +12,7 @@ import Header from './components/Header'
 import CardGrid from './components/CardGrid'
 import UserAccount from './components/UserAccount'
 import AdminPanel from './components/AdminPanel'
+import Explore from './components/pages/Explore';
 import { CartProvider } from './contexts/CartContext'
 
 function App() {
@@ -100,7 +101,9 @@ function App() {
           
           <main className="container mx-auto px-4 py-8">
             <Routes>
-              <Route path="/" element={
+              <Route path="/" element={<Explore />} />
+
+              <Route path="/market" element={
                 <div>
                   <div className="text-center mb-8">
                     <h1 className="text-4xl font-bold text-gray-900 mb-4">
