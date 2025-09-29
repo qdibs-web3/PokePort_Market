@@ -1,14 +1,17 @@
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
-import { Wallet, User, Settings, ShoppingCart } from 'lucide-react'
+import { Wallet, User, ShoppingCart } from 'lucide-react'
 import { useCart } from '../contexts/CartContext'
 import plogo from '/src/assets/plogo.png';
 
 const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => {
-  const location = useLocation()
-  const { getTotalItems } = useCart()
-  const cartItemCount = getTotalItems()
+  const location = useLocation();
+  const { getTotalItems } = useCart();
+  const cartItemCount = getTotalItems();
+
+  // Helper function to check if a route is active
+  const isActive = (path) => location.pathname === path;
 
   return (
     <header className="bg-white shadow-lg border-b">
@@ -23,12 +26,12 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
             />
           </Link>
 
-          {/* Navigation */}
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link 
               to="/" 
               className={`text-gray-600 hover:text-gray-900 transition-colors ${
-                location.pathname === '/' ? 'text-blue-600 font-semibold' : ''
+                isActive('/') ? 'text-blue-600 font-semibold' : ''
               }`}
             >
               Explore
@@ -36,7 +39,7 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
             <Link 
               to="/market" 
               className={`text-gray-600 hover:text-gray-900 transition-colors ${
-                location.pathname === '/' ? 'text-blue-600 font-semibold' : ''
+                isActive('/market') ? 'text-blue-600 font-semibold' : ''
               }`}
             >
               Market
@@ -45,17 +48,17 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
               <Link 
                 to="/account" 
                 className={`text-gray-600 hover:text-gray-900 transition-colors ${
-                  location.pathname === '/account' ? 'text-blue-600 font-semibold' : ''
+                  isActive('/account') ? 'text-blue-600 font-semibold' : ''
                 }`}
               >
                 My Account
               </Link>
             )}
-            {user && user.is_admin && (
+            {user?.is_admin && (
               <Link 
                 to="/admin" 
                 className={`text-gray-600 hover:text-gray-900 transition-colors ${
-                  location.pathname === '/admin' ? 'text-blue-600 font-semibold' : ''
+                  isActive('/admin') ? 'text-blue-600 font-semibold' : ''
                 }`}
               >
                 Admin Panel
@@ -63,7 +66,7 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
             )}
           </nav>
 
-          {/* Wallet Connection */}
+          {/* Wallet / Cart Section */}
           <div className="flex items-center space-x-4">
             {user && (
               <Link to="/account" className="relative">
@@ -77,6 +80,7 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
                 </Button>
               </Link>
             )}
+
             {user ? (
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2">
@@ -115,26 +119,37 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
           <Link 
             to="/" 
             className={`text-sm text-gray-600 hover:text-gray-900 transition-colors ${
-              location.pathname === '/' ? 'text-blue-600 font-semibold' : ''
+              isActive('/') ? 'text-blue-600 font-semibold' : ''
+            }`}
+          >
+            Explore
+          </Link>
+
+          <Link 
+            to="/market" 
+            className={`text-sm text-gray-600 hover:text-gray-900 transition-colors ${
+              isActive('/market') ? 'text-blue-600 font-semibold' : ''
             }`}
           >
             Market
           </Link>
+
           {user && (
             <Link 
               to="/account" 
               className={`text-sm text-gray-600 hover:text-gray-900 transition-colors ${
-                location.pathname === '/account' ? 'text-blue-600 font-semibold' : ''
+                isActive('/account') ? 'text-blue-600 font-semibold' : ''
               }`}
             >
               My Account
             </Link>
           )}
-          {user && user.is_admin && (
+
+          {user?.is_admin && (
             <Link 
               to="/admin" 
               className={`text-sm text-gray-600 hover:text-gray-900 transition-colors ${
-                location.pathname === '/admin' ? 'text-blue-600 font-semibold' : ''
+                isActive('/admin') ? 'text-blue-600 font-semibold' : ''
               }`}
             >
               Admin
@@ -143,7 +158,7 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
         </nav>
       </div>
     </header>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;
