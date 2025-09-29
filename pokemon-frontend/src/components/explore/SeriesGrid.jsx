@@ -16,18 +16,27 @@ export default function SeriesGrid({ series = [], loading = false, onSeriesClick
       <button
         key={s.id || s.code || s.key || s.name}
         onClick={() => onSeriesClick(s)}
-        className={`flex flex-col items-center p-3 rounded-md border transition-shadow hover:shadow-lg text-left ${
+        className={`flex flex-col items-center p-3 rounded-md border transition-all duration-200 hover:shadow-lg text-left ${
           selected && (selected.id === s.id || selected.code === s.code)
-            ? 'ring-2 ring-indigo-400'
-            : 'bg-white/5'
+            ? 'ring-2 ring-indigo-500 bg-indigo-50 border-indigo-300 shadow-md transform scale-105'
+            : 'bg-white/5 hover:bg-white/10 border-gray-200'
         }`}
       >
         {/* Only display the name and release date */}
-        <div className="text-sm font-medium">{s.name}</div>
-        <div className="text-xs text-gray-400">{s.releaseDate ?? ''}</div>
+        <div className={`text-sm font-medium ${
+          selected && (selected.id === s.id || selected.code === s.code)
+            ? 'text-indigo-700'
+            : 'text-gray-900'
+        }`}>{s.name}</div>
+        <div className={`text-xs ${
+          selected && (selected.id === s.id || selected.code === s.code)
+            ? 'text-indigo-500'
+            : 'text-gray-400'
+        }`}>{s.releaseDate ?? ''}</div>
       </button>
     ))}
   </div>
 );
 
 }
+

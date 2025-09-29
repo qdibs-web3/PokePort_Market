@@ -1,13 +1,25 @@
-// pokemon-frontend/src/lib/tcgdex.js
+// pokemon-frontend/src/lib/tcgdx.js
 const BASE = 'https://api.tcgdex.net/v2/en'; // using v2 English endpoint
 
-async function fetchJson(url) {
-  const res = await fetch(url);
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`TCGdex error ${res.status}: ${text}`);
+async function fetchJson(url ) {
+  try {
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`TCGdex error ${res.status}: ${text}`);
+    }
+    return res.json();
+  } catch (error) {
+    console.error('Fetch error:', error);
+    throw error;
   }
-  return res.json();
 }
 
 /**
@@ -29,48 +41,73 @@ export async function fetchSets({ serieId } = {}) {
 }
 
 export async function fetchCardsBySet(setId) {
-  const url = `https://api.tcgdex.net/v2/en/sets/${encodeURIComponent(setId)}`;
+  const url = `${BASE}/sets/${encodeURIComponent(setId)}`;
   const setData = await fetchJson(url);
 
   console.log('Raw set data:', setData); // Debug
   const cards = setData.cards || [];
   console.log('Raw cards array:', cards);
 
-  return cards
-    .map((card) => {
-      // Price: normal first, then holofoil
-      const price =
-        card?.tcgplayer?.prices?.normal?.market ??
-        card?.tcgplayer?.prices?.holofoil?.market ??
-        0;
+  // Fetch pricing data for each card individually
+  const cardsWithPricing = await Promise.all(
+    cards.map(async (card) => {
+      try {
+        // Fetch individual card data with pricing
+        const cardData = await fetchJson(`${BASE}/cards/${encodeURIComponent(card.id)}`);
+        
+        // Extract pricing from the individual card API response
+        const tcgPlayerPricing = cardData.pricing?.tcgplayer;
+        let marketPrice = 0;
+        
+        if (tcgPlayerPricing) {
+          // Try to get market price from normal variant first, then reverse-holofoil
+          marketPrice = tcgPlayerPricing.normal?.marketPrice ?? 
+                       tcgPlayerPricing['reverse-holofoil']?.marketPrice ?? 
+                       tcgPlayerPricing.holofoil?.marketPrice ?? 0;
+        }
 
-      // Rarity
-      const rarity = card.rarity || card?.tcgplayer?.rarity || 'N/A';
+        // Rarity from individual card data or fallback to set data
+        const rarity = cardData.rarity || card.rarity || 'N/A';
 
-      // Images
-      let images = {};
-      if (card.image) {
-        // Convert to high-resolution URL
-        // Example: https://assets.tcgdex.net/en/sm/sm12/86/high.png
-        images.small = card.image.replace(/\/$/, '') + '/low.png';
-        images.large = card.image.replace(/\/$/, '') + '/low.png';
-      } else if (card.images) {
-        // Keep existing object if present
-        images = card.images;
+        // Images - use the image from set data or individual card data
+        let images = {};
+        const imageUrl = card.image || cardData.image;
+        if (imageUrl) {
+          images.small = imageUrl.replace(/\/$/, '') + '/low.png';
+          images.large = imageUrl.replace(/\/$/, '') + '/high.png';
+        }
+
+        return {
+          id: card.id,
+          name: card.name || cardData.name,
+          number: card.localId || cardData.localId,
+          rarity,
+          set: setData.name,
+          images,
+          price: marketPrice,
+          // Store the full pricing object for potential future use
+          fullPricing: cardData.pricing
+        };
+      } catch (error) {
+        console.error(`Error fetching pricing for card ${card.id}:`, error);
+        // Return card with default pricing if individual fetch fails
+        return {
+          id: card.id,
+          name: card.name,
+          number: card.localId,
+          rarity: card.rarity || 'N/A',
+          set: setData.name,
+          images: card.image ? {
+            small: card.image.replace(/\/$/, '') + '/low.png',
+            large: card.image.replace(/\/$/, '') + '/high.png'
+          } : {},
+          price: 0,
+          fullPricing: null
+        };
       }
-
-      return {
-        id: card.id,
-        name: card.name,
-        number: card.number,
-        rarity,
-        set: card.set?.name || setData.name,
-        images,
-        price,
-      };
     })
-    .sort((a, b) => b.price - a.price);
+  );
+
+  // Sort by price (highest first)
+  return cardsWithPricing.sort((a, b) => b.price - a.price);
 }
-
-
-

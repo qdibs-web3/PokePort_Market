@@ -22,8 +22,8 @@ export default function Explore() {
       setLoadingSeries(true);
       try {
         const res = await fetchSeries();
-        // API may return array or { data: [] }, normalize
-        const list = Array.isArray(res) ? res : res.data ? res.data : res.series || [];
+        // API returns a direct array of series
+        const list = Array.isArray(res) ? res : [];
         // Sort alphabetically for easier navigation
         list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
         setSeries(list);
