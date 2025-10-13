@@ -43,6 +43,9 @@ function formatCardResponse(card) {
     image_url: allImages[0] || card.imageUrl, // First image for backward compatibility
     image_urls: allImages, // All images for carousel
     rarity: card.rarity,
+    product_type: card.productType,
+    grading_company: card.gradingCompany,
+    grade: card.grade,
     set_name: card.setName,
     card_number: card.cardNumber,
     condition: card.condition,
@@ -111,6 +114,9 @@ async function createCard(req, res) {
       image_url,
       image_urls,
       rarity,
+      product_type,
+      grading_company,
+      grade,
       set_name,
       card_number,
       condition,
@@ -144,6 +150,9 @@ async function createCard(req, res) {
       imageUrl: image_url?.trim(), // Keep for backward compatibility
       imageUrls: imageUrls, // New multiple images field
       rarity,
+      productType: product_type || 'Card',
+      gradingCompany: grading_company?.trim(),
+      grade: grade?.trim(),
       setName: set_name?.trim(),
       cardNumber: card_number?.trim(),
       condition,

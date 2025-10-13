@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Button } from '@/components/ui/button.jsx'
@@ -10,10 +11,19 @@ import { User, Package, Clock, CheckCircle, Truck, XCircle, ShoppingCart, Trash2
 import { useCart } from '../contexts/CartContext'
 
 const UserAccount = ({ user }) => {
+  const location = useLocation()
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'profile')
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const { items, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart()
+  
+  // Update active tab when location state changes
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab)
+    }
+  }, [location])
   
   // Checkout form state
   const [checkoutForm, setCheckoutForm] = useState({
@@ -201,7 +211,7 @@ const UserAccount = ({ user }) => {
         <p className="text-gray-600">Manage your profile and view your order history</p>
       </div>
 
-      <Tabs defaultValue="profile" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="cart">Cart ({items.length})</TabsTrigger>

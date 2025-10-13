@@ -27,13 +27,17 @@ const AdminPanel = ({ user, onCardUpdate }) => {
   const [loading, setLoading] = useState(true)
   const [showAddCard, setShowAddCard] = useState(false)
   const [editingCard, setEditingCard] = useState(null)
+  const [productFormTab, setProductFormTab] = useState('card') // 'card' or 'gc' (graded card)
   const [newCard, setNewCard] = useState({
     name: '',
     description: '',
     price_eth: '',
     image_url: '',
-    image_urls: [''], // Add this for multiple images
+    image_urls: [''],
     rarity: '',
+    product_type: 'Card',
+    grading_company: '',
+    grade: '',
     set_name: '',
     card_number: '',
     condition: '',
@@ -52,7 +56,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
       let ordersData = { orders: [] }
 
       // Load all cards (including inactive)
-      const cardsResponse = await fetch('/api/cards')
+      const cardsResponse = await fetch('/api/cards?include_inactive=true')
       if (cardsResponse.ok) {
         cardsData = await cardsResponse.json()
         setCards(cardsData.cards || [])
@@ -76,7 +80,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
 
   const calculateAnalytics = (cardsData, ordersData) => {
     const totalCards = cardsData.length
-    const activeCards = cardsData.filter(card => card.is_active === true).length // Explicit boolean check
+    const activeCards = cardsData.filter(card => card.is_active === true).length
     const totalOrders = ordersData.length
     const confirmedOrders = ordersData.filter(order => 
       order.status === 'confirmed' || 
@@ -88,12 +92,6 @@ const AdminPanel = ({ user, onCardUpdate }) => {
     }, 0)
     const pendingOrders = ordersData.filter(order => order.status === 'pending').length
 
-    console.log('Analytics Debug:', { // Add debug logging
-      totalCards,
-      activeCards,
-      cardsData: cardsData.map(c => ({ name: c.name, is_active: c.is_active }))
-    })
-
     setAnalytics({
       totalCards,
       activeCards,
@@ -103,7 +101,6 @@ const AdminPanel = ({ user, onCardUpdate }) => {
       pendingOrders
     })
   }
-
 
   const handleAddCard = async (e) => {
     e.preventDefault()
@@ -127,17 +124,27 @@ const AdminPanel = ({ user, onCardUpdate }) => {
           description: '',
           price_eth: '',
           image_url: '',
+          image_urls: [''],
           rarity: '',
+          product_type: 'Card',
+          grading_company: '',
+          grade: '',
           set_name: '',
           card_number: '',
           condition: '',
           stock_quantity: 1
         })
+        setProductFormTab('card')
         loadAdminData()
         onCardUpdate()
+        alert('Product added successfully!')
+      } else {
+        const errorData = await response.json()
+        alert('Failed to add product: ' + (errorData.error || 'Unknown error'))
       }
     } catch (error) {
       console.error('Error adding card:', error)
+      alert('Error adding product: ' + error.message)
     }
   }
 
@@ -162,35 +169,30 @@ const AdminPanel = ({ user, onCardUpdate }) => {
 
   const handleDeleteCard = async (cardId, cardName) => {
     if (!confirm(`Are you sure you want to permanently delete "${cardName}"? This action cannot be undone.`)) {
-      return;
+      return
     }
 
     try {
-      console.log('Deleting card:', cardId); // Debug log
-      
       const response = await fetch(`/api/cards/${cardId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-      });
+      })
 
       if (response.ok) {
-        alert('Card deleted successfully!');
-        loadAdminData();
-        onCardUpdate();
+        alert('Product deleted successfully!')
+        loadAdminData()
+        onCardUpdate()
       } else {
-        const errorData = await response.json();
-        console.error('Failed to delete card:', errorData);
-        alert('Failed to delete card: ' + (errorData.error || 'Unknown error'));
+        const errorData = await response.json()
+        alert('Failed to delete product: ' + (errorData.error || 'Unknown error'))
       }
     } catch (error) {
-      console.error('Error deleting card:', error);
-      alert('Error deleting card: ' + error.message);
+      console.error('Error deleting card:', error)
+      alert('Error deleting product: ' + error.message)
     }
-  };
-
-
+  }
 
   const handleEditCard = async (e) => {
     e.preventDefault()
@@ -206,6 +208,9 @@ const AdminPanel = ({ user, onCardUpdate }) => {
           price_eth: parseFloat(editingCard.price_eth),
           image_url: editingCard.image_url,
           rarity: editingCard.rarity,
+          product_type: editingCard.product_type,
+          grading_company: editingCard.grading_company,
+          grade: editingCard.grade,
           set_name: editingCard.set_name,
           condition: editingCard.condition,
           stock_quantity: parseInt(editingCard.stock_quantity)
@@ -216,44 +221,39 @@ const AdminPanel = ({ user, onCardUpdate }) => {
         setEditingCard(null)
         loadAdminData()
         onCardUpdate()
-        alert('Card updated successfully!')
+        alert('Product updated successfully!')
       } else {
         const errorData = await response.json()
-        alert('Failed to update card: ' + (errorData.error || 'Unknown error'))
+        alert('Failed to update product: ' + (errorData.error || 'Unknown error'))
       }
     } catch (error) {
       console.error('Error updating card:', error)
-      alert('Error updating card: ' + error.message)
+      alert('Error updating product: ' + error.message)
     }
   }
 
-
-  const handleUpdateOrderStatus = async (orderId, status) => {
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
-      console.log('Updating order status:', { orderId, status }); // Debug log
-      
       const response = await fetch(`/api/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status }),
-      });
+        body: JSON.stringify({ status: newStatus }),
+      })
 
       if (response.ok) {
-        console.log('Order status updated successfully'); // Debug log
-        loadAdminData(); // Reload data to reflect changes
+        alert('Order status updated successfully!')
+        loadAdminData()
       } else {
-        const errorData = await response.json();
-        console.error('Failed to update order status:', errorData);
-        alert('Failed to update order status: ' + (errorData.error || 'Unknown error'));
+        const errorData = await response.json()
+        alert('Failed to update order status: ' + (errorData.error || 'Unknown error'))
       }
     } catch (error) {
-      console.error('Error updating order status:', error);
-      alert('Error updating order status: ' + error.message);
+      console.error('Error updating order status:', error)
+      alert('Error updating order status: ' + error.message)
     }
-  };
-
+  }
 
   const toggleCardActive = (card) => {
     handleUpdateCard(card.id, { is_active: !card.is_active })
@@ -343,171 +343,322 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                 <DialogTrigger asChild>
                   <Button className="bg-gradient-to-r from-blue-500 to-purple-600">
                     <Plus className="w-4 h-4 mr-2" />
-                    Add New Card
+                    Add New Product
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Add New Pokemon Card</DialogTitle>
+                    <DialogTitle>Add New Product</DialogTitle>
                     <DialogDescription>
-                      Add a new card to your marketplace inventory
+                      Add a new product to your marketplace inventory
                     </DialogDescription>
                   </DialogHeader>
-                  <form onSubmit={handleAddCard} className="space-y-4">
-                    {/* Add Card Form - keep existing form fields */}
-                    <div>
-                      <Label htmlFor="name">Card Name</Label>
-                      <Input
-                        id="name"
-                        value={newCard.name}
-                        onChange={(e) => setNewCard({...newCard, name: e.target.value})}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="price">Price (ETH)</Label>
-                      <Input
-                        id="price"
-                        type="number"
-                        step="0.001"
-                        value={newCard.price_eth}
-                        onChange={(e) => setNewCard({...newCard, price_eth: e.target.value})}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="rarity">Rarity</Label>
-                      <select
-                        id="rarity"
-                        value={newCard.rarity}
-                        onChange={(e) => setNewCard({...newCard, rarity: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      >
-                        <option value="">Select Rarity</option>
-                        <option value="Common">Common</option>
-                        <option value="Uncommon">Uncommon</option>
-                        <option value="Rare">Rare</option>
-                        <option value="Ultra Rare">Ultra Rare</option>
-                        <option value="Legendary">Legendary</option>
-                      </select>
-                    </div>
-                    <div>
-                      <Label htmlFor="set_name">Set Name</Label>
-                      <Input
-                        id="set_name"
-                        value={newCard.set_name}
-                        onChange={(e) => setNewCard({...newCard, set_name: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="condition">Condition</Label>
-                      <select
-                        id="condition"
-                        value={newCard.condition}
-                        onChange={(e) => setNewCard({...newCard, condition: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      >
-                        <option value="">Select Condition</option>
-                        <option value="Mint">Mint</option>
-                        <option value="Near Mint">Near Mint</option>
-                        <option value="Lightly Played">Lightly Played</option>
-                        <option value="Moderately Played">Moderately Played</option>
-                        <option value="Heavily Played">Heavily Played</option>
-                      </select>
-                    </div>
-                    <div>
-                      <Label htmlFor="stock">Stock Quantity</Label>
-                      <Input
-                        id="stock"
-                        type="number"
-                        min="1"
-                        value={newCard.stock_quantity}
-                        onChange={(e) => setNewCard({...newCard, stock_quantity: e.target.value})}
-                        required
-                      />
-                    </div>
+                  
+                  {/* Product Type Tabs */}
+                  <Tabs value={productFormTab} onValueChange={setProductFormTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="card">Card</TabsTrigger>
+                      <TabsTrigger value="gc">GC (Graded Card)</TabsTrigger>
+                    </TabsList>
 
-                    {/* Replace the single image URL input with multiple image inputs */}
-                    <div>
-                      <Label htmlFor="image_urls">Image URLs</Label>
-                      <div className="space-y-2">
-                        {(newCard.image_urls || []).map((url, index) => (
-                          <div key={index} className="flex space-x-2">
+                    <TabsContent value="card">
+                      <form onSubmit={handleAddCard} className="space-y-4 mt-4">
+                        <div>
+                          <Label htmlFor="product_type">Product Type *</Label>
+                          <select
+                            id="product_type"
+                            value={newCard.product_type}
+                            onChange={(e) => setNewCard({...newCard, product_type: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            required
+                          >
+                            <option value="Card">Card</option>
+                            <option value="Sealed">Sealed</option>
+                            <option value="Custom">Custom</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="name">Product Name *</Label>
+                          <Input
+                            id="name"
+                            value={newCard.name}
+                            onChange={(e) => setNewCard({...newCard, name: e.target.value})}
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="price">Price (ETH) *</Label>
+                          <Input
+                            id="price"
+                            type="number"
+                            step="0.001"
+                            value={newCard.price_eth}
+                            onChange={(e) => setNewCard({...newCard, price_eth: e.target.value})}
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="rarity">Rarity</Label>
+                          <select
+                            id="rarity"
+                            value={newCard.rarity}
+                            onChange={(e) => setNewCard({...newCard, rarity: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                          >
+                            <option value="">Select Rarity</option>
+                            <option value="Common">Common</option>
+                            <option value="Uncommon">Uncommon</option>
+                            <option value="Rare">Rare</option>
+                            <option value="Ultra Rare">Ultra Rare</option>
+                            <option value="Legendary">Legendary</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="set_name">Set Name</Label>
+                          <Input
+                            id="set_name"
+                            value={newCard.set_name}
+                            onChange={(e) => setNewCard({...newCard, set_name: e.target.value})}
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="condition">Condition</Label>
+                          <select
+                            id="condition"
+                            value={newCard.condition}
+                            onChange={(e) => setNewCard({...newCard, condition: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                          >
+                            <option value="">Select Condition</option>
+                            <option value="Mint">Mint</option>
+                            <option value="Near Mint">Near Mint</option>
+                            <option value="Lightly Played">Lightly Played</option>
+                            <option value="Moderately Played">Moderately Played</option>
+                            <option value="Heavily Played">Heavily Played</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="stock">Stock Quantity *</Label>
+                          <Input
+                            id="stock"
+                            type="number"
+                            min="1"
+                            value={newCard.stock_quantity}
+                            onChange={(e) => setNewCard({...newCard, stock_quantity: e.target.value})}
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="image_url">Image URL</Label>
+                          <Input
+                            id="image_url"
+                            type="url"
+                            value={newCard.image_url}
+                            onChange={(e) => setNewCard({...newCard, image_url: e.target.value})}
+                            placeholder="https://example.com/image.jpg"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="description">Description</Label>
+                          <Textarea
+                            id="description"
+                            value={newCard.description}
+                            onChange={(e) => setNewCard({...newCard, description: e.target.value})}
+                            rows={3}
+                          />
+                        </div>
+
+                        <Button type="submit" className="w-full">Add Product</Button>
+                      </form>
+                    </TabsContent>
+
+                    <TabsContent value="gc">
+                      <form onSubmit={handleAddCard} className="space-y-4 mt-4">
+                        <input type="hidden" value="Graded Card" />
+                        
+                        <div>
+                          <Label htmlFor="gc_product_type">Product Type *</Label>
+                          <select
+                            id="gc_product_type"
+                            value="Graded Card"
+                            onChange={(e) => setNewCard({...newCard, product_type: 'Graded Card'})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+                            disabled
+                          >
+                            <option value="Graded Card">Graded Card</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="gc_name">Product Name *</Label>
+                          <Input
+                            id="gc_name"
+                            value={newCard.name}
+                            onChange={(e) => setNewCard({...newCard, name: e.target.value, product_type: 'Graded Card'})}
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="gc_price">Price (ETH) *</Label>
+                          <Input
+                            id="gc_price"
+                            type="number"
+                            step="0.001"
+                            value={newCard.price_eth}
+                            onChange={(e) => setNewCard({...newCard, price_eth: e.target.value})}
+                            required
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="grading_company">Grading Company *</Label>
                             <Input
-                              type="url"
-                              value={url}
-                              onChange={(e) => {
-                                const newUrls = [...(newCard.image_urls || [])];
-                                newUrls[index] = e.target.value;
-                                setNewCard({...newCard, image_urls: newUrls});
-                              }}
-                              placeholder={`Image URL ${index + 1}`}
+                              id="grading_company"
+                              value={newCard.grading_company}
+                              onChange={(e) => setNewCard({...newCard, grading_company: e.target.value})}
+                              placeholder="e.g., PSA, BGS, CGC"
+                              required
                             />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const newUrls = (newCard.image_urls || []).filter((_, i) => i !== index);
-                                setNewCard({...newCard, image_urls: newUrls});
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
                           </div>
-                        ))}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            const newUrls = [...(newCard.image_urls || []), ''];
-                            setNewCard({...newCard, image_urls: newUrls});
-                          }}
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Add Image URL
-                        </Button>
-                      </div>
-                    </div>
 
-                    {/* Keep the single image URL for backward compatibility */}
-                    <div>
-                      <Label htmlFor="image_url">Primary Image URL (Legacy)</Label>
-                      <Input
-                        id="image_url"
-                        type="url"
-                        value={newCard.image_url}
-                        onChange={(e) => setNewCard({...newCard, image_url: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        value={newCard.description}
-                        onChange={(e) => setNewCard({...newCard, description: e.target.value})}
-                        rows={3}
-                      />
-                    </div>
-                    <Button type="submit" className="w-full">Add Card</Button>
-                  </form>
+                          <div>
+                            <Label htmlFor="grade">Grade *</Label>
+                            <Input
+                              id="grade"
+                              value={newCard.grade}
+                              onChange={(e) => setNewCard({...newCard, grade: e.target.value})}
+                              placeholder="e.g., 10, 9.5"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="gc_rarity">Rarity</Label>
+                          <select
+                            id="gc_rarity"
+                            value={newCard.rarity}
+                            onChange={(e) => setNewCard({...newCard, rarity: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                          >
+                            <option value="">Select Rarity</option>
+                            <option value="Common">Common</option>
+                            <option value="Uncommon">Uncommon</option>
+                            <option value="Rare">Rare</option>
+                            <option value="Ultra Rare">Ultra Rare</option>
+                            <option value="Legendary">Legendary</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="gc_set_name">Set Name</Label>
+                          <Input
+                            id="gc_set_name"
+                            value={newCard.set_name}
+                            onChange={(e) => setNewCard({...newCard, set_name: e.target.value})}
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="gc_stock">Stock Quantity *</Label>
+                          <Input
+                            id="gc_stock"
+                            type="number"
+                            min="1"
+                            value={newCard.stock_quantity}
+                            onChange={(e) => setNewCard({...newCard, stock_quantity: e.target.value})}
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="gc_image_url">Image URL</Label>
+                          <Input
+                            id="gc_image_url"
+                            type="url"
+                            value={newCard.image_url}
+                            onChange={(e) => setNewCard({...newCard, image_url: e.target.value})}
+                            placeholder="https://example.com/image.jpg"
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="gc_description">Description</Label>
+                          <Textarea
+                            id="gc_description"
+                            value={newCard.description}
+                            onChange={(e) => setNewCard({...newCard, description: e.target.value})}
+                            rows={3}
+                          />
+                        </div>
+
+                        <Button type="submit" className="w-full">Add Graded Card</Button>
+                      </form>
+                    </TabsContent>
+                  </Tabs>
                 </DialogContent>
               </Dialog>
             </div>
 
             {/* Edit Card Dialog */}
-            <Dialog open={!!editingCard} onOpenChange={() => setEditingCard(null)}>
+            <Dialog open={!!editingCard} onOpenChange={(open) => !open && setEditingCard(null)}>
               <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Edit Pokemon Card</DialogTitle>
+                  <DialogTitle>Edit Product</DialogTitle>
                   <DialogDescription>
-                    Update card information
+                    Update product information
                   </DialogDescription>
                 </DialogHeader>
                 {editingCard && (
                   <form onSubmit={(e) => handleEditCard(e)} className="space-y-4">
                     <div>
-                      <Label htmlFor="edit-name">Card Name</Label>
+                      <Label htmlFor="edit-product_type">Product Type</Label>
+                      <select
+                        id="edit-product_type"
+                        value={editingCard.product_type || 'Card'}
+                        onChange={(e) => setEditingCard({...editingCard, product_type: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      >
+                        <option value="Card">Card</option>
+                        <option value="Graded Card">Graded Card</option>
+                        <option value="Sealed">Sealed</option>
+                        <option value="Custom">Custom</option>
+                      </select>
+                    </div>
+
+                    {editingCard.product_type === 'Graded Card' && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="edit-grading_company">Grading Company</Label>
+                          <Input
+                            id="edit-grading_company"
+                            value={editingCard.grading_company || ''}
+                            onChange={(e) => setEditingCard({...editingCard, grading_company: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="edit-grade">Grade</Label>
+                          <Input
+                            id="edit-grade"
+                            value={editingCard.grade || ''}
+                            onChange={(e) => setEditingCard({...editingCard, grade: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <Label htmlFor="edit-name">Product Name</Label>
                       <Input
                         id="edit-name"
                         value={editingCard.name}
@@ -515,6 +666,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         required
                       />
                     </div>
+
                     <div>
                       <Label htmlFor="edit-price">Price (ETH)</Label>
                       <Input
@@ -526,6 +678,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         required
                       />
                     </div>
+
                     <div>
                       <Label htmlFor="edit-rarity">Rarity</Label>
                       <select
@@ -542,6 +695,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         <option value="Legendary">Legendary</option>
                       </select>
                     </div>
+
                     <div>
                       <Label htmlFor="edit-set">Set Name</Label>
                       <Input
@@ -550,6 +704,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         onChange={(e) => setEditingCard({...editingCard, set_name: e.target.value})}
                       />
                     </div>
+
                     <div>
                       <Label htmlFor="edit-condition">Condition</Label>
                       <select
@@ -566,6 +721,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         <option value="Heavily Played">Heavily Played</option>
                       </select>
                     </div>
+
                     <div>
                       <Label htmlFor="edit-stock">Stock Quantity</Label>
                       <Input
@@ -577,6 +733,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         required
                       />
                     </div>
+
                     <div>
                       <Label htmlFor="edit-image">Image URL</Label>
                       <Input
@@ -586,6 +743,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         onChange={(e) => setEditingCard({...editingCard, image_url: e.target.value})}
                       />
                     </div>
+
                     <div>
                       <Label htmlFor="edit-description">Description</Label>
                       <Textarea
@@ -595,8 +753,9 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         rows={3}
                       />
                     </div>
+
                     <div className="flex space-x-2">
-                      <Button type="submit" className="flex-1">Update Card</Button>
+                      <Button type="submit" className="flex-1">Update Product</Button>
                       <Button type="button" variant="outline" onClick={() => setEditingCard(null)}>
                         Cancel
                       </Button>
@@ -623,6 +782,9 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                             price_eth: card.price_eth,
                             image_url: card.image_url,
                             rarity: card.rarity,
+                            product_type: card.product_type || 'Card',
+                            grading_company: card.grading_company,
+                            grade: card.grade,
                             set_name: card.set_name,
                             condition: card.condition,
                             stock_quantity: card.stock_quantity
@@ -649,7 +811,10 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         </Button>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex flex-wrap gap-2">
+                      {card.product_type && (
+                        <Badge variant="default">{card.product_type}</Badge>
+                      )}
                       {card.rarity && (
                         <Badge variant="secondary">{card.rarity}</Badge>
                       )}
@@ -662,6 +827,9 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                     <div className="space-y-2 text-sm">
                       <p><span className="font-medium">Price:</span> {card.price_eth} ETH</p>
                       <p><span className="font-medium">Stock:</span> {card.stock_quantity}</p>
+                      {card.grading_company && (
+                        <p><span className="font-medium">Grading:</span> {card.grading_company} {card.grade}</p>
+                      )}
                       {card.set_name && <p><span className="font-medium">Set:</span> {card.set_name}</p>}
                       {card.condition && <p><span className="font-medium">Condition:</span> {card.condition}</p>}
                     </div>

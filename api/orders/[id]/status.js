@@ -11,18 +11,25 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  if (req.method !== 'PUT') {
+  // Accept both PUT and PATCH methods
+  if (req.method !== 'PUT' && req.method !== 'PATCH') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
     await connectToDatabase();
 
-    const { id } = req.query;
+    // Check multiple places for the ID (params, query, body)
+    const id = req.query.id || req.params?.id || req.body.id;
     const { status } = req.body;
 
+    console.log('Order status update request:', { id, status, query: req.query, params: req.params });
+
     if (!id) {
-      return res.status(400).json({ error: 'Order ID is required' });
+      return res.status(400).json({ 
+        error: 'Order ID is required',
+        debug: { query: req.query, params: req.params, body: req.body }
+      });
     }
 
     if (!status) {

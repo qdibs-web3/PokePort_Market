@@ -1,7 +1,39 @@
 {
   "version": 2,
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/pokemon-frontend/$1" }
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/orders/([^/]+)/status",
+      "dest": "/api/orders/[id]/status.js",
+      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+    },
+    {
+      "src": "/api/orders/([^/]+)/confirm",
+      "dest": "/api/orders/[id]/confirm.js",
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    },
+    {
+      "src": "/api/cards/([^/]+)",
+      "dest": "/api/cards/[id].js",
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    },
+    {
+      "src": "/api/orders/user/([^/]+)",
+      "dest": "/api/orders/user/[wallet_address].js",
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/pokemon-frontend/$1"
+    }
   ]
 }

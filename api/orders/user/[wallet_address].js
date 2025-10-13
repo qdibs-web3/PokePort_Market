@@ -19,8 +19,20 @@ module.exports = async (req, res) => {
   try {
     await connectToDatabase();
 
-    const { wallet_address } = req.query;
+    console.log('User orders endpoint - req.query:', req.query);
+    console.log('User orders endpoint - req.params:', req.params);
+    
+    // Get wallet_address from either query or params
+    const wallet_address = req.query.wallet_address || req.params?.wallet_address;
     const { page = 1, per_page = 20 } = req.query;
+    
+    if (!wallet_address) {
+      console.log('ERROR: wallet_address is undefined!');
+      return res.status(400).json({ error: 'Wallet address is required' });
+    }
+    
+    console.log('Using wallet_address:', wallet_address);
+    
     const pageNum = parseInt(page);
     const perPage = parseInt(per_page);
     const skip = (pageNum - 1) * perPage;
@@ -91,4 +103,3 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Failed to fetch user orders' });
   }
 };
-

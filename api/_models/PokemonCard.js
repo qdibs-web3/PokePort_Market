@@ -24,6 +24,17 @@ const pokemonCardSchema = new mongoose.Schema({
     type: String,
     enum: ['Common', 'Uncommon', 'Rare', 'Ultra Rare', 'Legendary']
   },
+  productType: {
+    type: String,
+    enum: ['Card', 'Graded Card', 'Sealed', 'Custom'],
+    default: 'Card'
+  },
+  gradingCompany: {
+    type: String
+  },
+  grade: {
+    type: String
+  },
   setName: {
     type: String
   },

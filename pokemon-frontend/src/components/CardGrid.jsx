@@ -3,24 +3,38 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Input } from '@/components/ui/input.jsx'
-import { Search, ShoppingCart, Star, Package } from 'lucide-react'
+import { Search, ShoppingCart, Star, Package, Filter, X } from 'lucide-react'
 import { useCart } from '../contexts/CartContext'
+import Toast from './Toast'
 
 const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedRarity, setSelectedRarity] = useState('')
-  const [currentImageIndex, setCurrentImageIndex] = useState({});
+  const [selectedProductType, setSelectedProductType] = useState('')
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' })
+  const [currentImageIndex, setCurrentImageIndex] = useState({})
+  const [showToast, setShowToast] = useState(false)
+  const [toastCard, setToastCard] = useState(null)
   const { addToCart } = useCart()
 
-  // Filter cards based on search and rarity
+  // Filter cards based on search, rarity, product type, and price
   const filteredCards = cards.filter(card => {
     const matchesSearch = card.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesRarity = !selectedRarity || card.rarity === selectedRarity
-    return matchesSearch && matchesRarity && card.is_active && card.stock_quantity > 0
+    const matchesProductType = !selectedProductType || card.product_type === selectedProductType
+    
+    // Price filtering
+    const cardPrice = parseFloat(card.price_eth)
+    const minPrice = priceRange.min ? parseFloat(priceRange.min) : 0
+    const maxPrice = priceRange.max ? parseFloat(priceRange.max) : Infinity
+    const matchesPrice = cardPrice >= minPrice && cardPrice <= maxPrice
+    
+    return matchesSearch && matchesRarity && matchesProductType && matchesPrice && card.is_active && card.stock_quantity > 0
   })
 
-  // Get unique rarities for filter
+  // Get unique rarities and product types for filters
   const rarities = [...new Set(cards.map(card => card.rarity).filter(Boolean))]
+  const productTypes = ['Card', 'Graded Card', 'Sealed', 'Custom']
 
   // Handle adding card to cart
   const handleAddToCart = (card) => {
@@ -30,7 +44,16 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
     }
 
     addToCart(card)
-    alert(`${card.name} added to cart!`)
+    setToastCard(card)
+    setShowToast(true)
+  }
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm('')
+    setSelectedRarity('')
+    setSelectedProductType('')
+    setPriceRange({ min: '', max: '' })
   }
 
   if (loading) {
@@ -43,11 +66,18 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
 
   return (
     <div>
+      {/* Toast Notification */}
+      <Toast
+        show={showToast}
+        onClose={() => setShowToast(false)}
+        card={toastCard}
+      />
+
       {/* Search and Filters */}
       <div className="mb-8 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
               placeholder="Search Pokemon..."
               value={searchTerm}
@@ -56,6 +86,143 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
             />
           </div>
         </div>
+
+        {/* Filter Section */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              Filters
+            </h3>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={clearFilters}
+              className="text-xs"
+            >
+              <X className="w-3 h-3 mr-1" />
+              Clear All
+            </Button>
+          </div>
+
+          {/* Product Type Filter Buttons */}
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-2 block">Product Type</label>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={selectedProductType === '' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedProductType('')}
+                className="text-xs"
+              >
+                All
+              </Button>
+              {productTypes.map((type) => (
+                <Button
+                  key={type}
+                  variant={selectedProductType === type ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedProductType(type)}
+                  className="text-xs"
+                >
+                  {type}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Rarity Filter */}
+          {rarities.length > 0 && (
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-2 block">Rarity</label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={selectedRarity === '' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedRarity('')}
+                  className="text-xs"
+                >
+                  All
+                </Button>
+                {rarities.map((rarity) => (
+                  <Button
+                    key={rarity}
+                    variant={selectedRarity === rarity ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedRarity(rarity)}
+                    className="text-xs"
+                  >
+                    {rarity}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Price Range Filter */}
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-2 block">Price Range (ETH)</label>
+            <div className="flex gap-2 items-center">
+              <Input
+                type="number"
+                step="0.001"
+                placeholder="Min"
+                value={priceRange.min}
+                onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                className="text-sm"
+              />
+              <span className="text-gray-400">-</span>
+              <Input
+                type="number"
+                step="0.001"
+                placeholder="Max"
+                value={priceRange.max}
+                onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                className="text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Active Filters Display */}
+        {(selectedProductType || selectedRarity || priceRange.min || priceRange.max) && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs text-gray-600">Active filters:</span>
+            {selectedProductType && (
+              <Badge variant="secondary" className="text-xs">
+                Type: {selectedProductType}
+                <button 
+                  onClick={() => setSelectedProductType('')}
+                  className="ml-1 hover:text-red-600"
+                >
+                  ×
+                </button>
+              </Badge>
+            )}
+            {selectedRarity && (
+              <Badge variant="secondary" className="text-xs">
+                Rarity: {selectedRarity}
+                <button 
+                  onClick={() => setSelectedRarity('')}
+                  className="ml-1 hover:text-red-600"
+                >
+                  ×
+                </button>
+              </Badge>
+            )}
+            {(priceRange.min || priceRange.max) && (
+              <Badge variant="secondary" className="text-xs">
+                Price: {priceRange.min || '0'} - {priceRange.max || '∞'} ETH
+                <button 
+                  onClick={() => setPriceRange({ min: '', max: '' })}
+                  className="ml-1 hover:text-red-600"
+                >
+                  ×
+                </button>
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Cards Grid */}
@@ -81,6 +248,15 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                   />
                 </div>
 
+                {/* Product Type Badge */}
+                {card.product_type && (
+                  <Badge
+                    className="absolute top-3 left-3 text-xs px-3 py-1 rounded-full shadow-lg bg-indigo-500 text-white"
+                  >
+                    {card.product_type}
+                  </Badge>
+                )}
+
                 {/* Condition Badge */}
                 {card.condition && (
                   <Badge
@@ -97,7 +273,6 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                 )}
               </CardHeader>
 
-
               <CardContent className="-mt-5 pb-2 px-3 space-y-1">
                 <CardTitle className="text-m font-bold text-gray-900 line-clamp-1 mt-1">
                   {card.name}
@@ -108,6 +283,11 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                 </span>
 
                 <div className="grid grid-cols-1 gap-1 text-sm text-gray-600">
+                  {card.product_type === 'Graded Card' && card.grading_company && (
+                    <div>
+                      <span className="font-medium">Grade:</span> {card.grading_company} {card.grade}
+                    </div>
+                  )}
                   {card.set_name && (
                     <div>
                       <span className="font-medium">Set:</span> {card.set_name}
@@ -129,7 +309,6 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                 </div>
               </CardContent>
 
- 
               {/* Compact Footer */}
               <CardFooter className="p-2 pt-0">
                 <Button 
@@ -148,7 +327,6 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
             </Card>
           ))}
         </div>
-
       )}
     </div>
   )

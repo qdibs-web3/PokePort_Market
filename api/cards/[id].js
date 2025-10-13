@@ -51,6 +51,9 @@ async function getCard(req, res, id) {
       price_eth: card.priceEth,
       image_url: card.imageUrl,
       rarity: card.rarity,
+      product_type: card.productType,
+      grading_company: card.gradingCompany,
+      grade: card.grade,
       set_name: card.setName,
       card_number: card.cardNumber,
       condition: card.condition,
@@ -75,6 +78,9 @@ async function updateCard(req, res, id) {
       price_eth,
       image_url,
       rarity,
+      product_type,
+      grading_company,
+      grade,
       set_name,
       card_number,
       condition,
@@ -88,6 +94,9 @@ async function updateCard(req, res, id) {
     if (price_eth !== undefined) updateData.priceEth = parseFloat(price_eth);
     if (image_url !== undefined) updateData.imageUrl = image_url;
     if (rarity !== undefined) updateData.rarity = rarity;
+    if (product_type !== undefined) updateData.productType = product_type;
+    if (grading_company !== undefined) updateData.gradingCompany = grading_company;
+    if (grade !== undefined) updateData.grade = grade;
     if (set_name !== undefined) updateData.setName = set_name;
     if (card_number !== undefined) updateData.cardNumber = card_number;
     if (condition !== undefined) updateData.condition = condition;
@@ -109,6 +118,9 @@ async function updateCard(req, res, id) {
       price_eth: card.priceEth,
       image_url: card.imageUrl,
       rarity: card.rarity,
+      product_type: card.productType,
+      grading_company: card.gradingCompany,
+      grade: card.grade,
       set_name: card.setName,
       card_number: card.cardNumber,
       condition: card.condition,
