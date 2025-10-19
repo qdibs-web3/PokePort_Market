@@ -28,17 +28,24 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'],
+    enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'expired'],
     default: 'pending'
+  },
+  customerInfo: {
+    type: Object,
+    default: {}
   },
   buyerWalletAddress: {
     type: String,
     required: true,
     lowercase: true
+  },
+  expiresAt: {
+    type: Date,
+    default: () => new Date(Date.now() + 10 * 60 * 1000) // 10 minutes from creation
   }
 }, {
   timestamps: true
 });
 
 module.exports = mongoose.models.Order || mongoose.model('Order', orderSchema);
-

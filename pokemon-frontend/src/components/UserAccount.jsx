@@ -559,8 +559,17 @@ const UserAccount = ({ user }) => {
                       )}
                       
                       {order.transaction_hash && (
-                        <div className="text-xs text-gray-500 font-mono bg-gray-50 p-2 rounded">
-                          TX: {order.transaction_hash}
+                        <div className="text-xs bg-gray-50 p-2 rounded">
+                          <span className="text-gray-500">Transaction: </span>
+                          <a 
+                            href={`https://etherscan.io/tx/${order.transaction_hash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 font-mono underline"
+                          >
+                            {order.transaction_hash.slice(0, 10)}...{order.transaction_hash.slice(-8)}
+                          </a>
+                          <span className="text-gray-400 ml-2 text-xs">↗ View on Etherscan</span>
                         </div>
                       )}
                         </div>
@@ -621,8 +630,17 @@ const UserAccount = ({ user }) => {
                           )}
                           
                           {order.transaction_hash && (
-                            <div className="text-xs text-gray-500 font-mono bg-gray-50 p-2 rounded">
-                              TX: {order.transaction_hash}
+                            <div className="text-xs bg-gray-50 p-2 rounded">
+                              <span className="text-gray-500">Transaction: </span>
+                              <a 
+                                href={`https://etherscan.io/tx/${order.transaction_hash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 font-mono underline"
+                              >
+                                {order.transaction_hash.slice(0, 10)}...{order.transaction_hash.slice(-8)}
+                              </a>
+                              <span className="text-gray-400 ml-2 text-xs">↗ View on Etherscan</span>
                             </div>
                           )}
                         </div>

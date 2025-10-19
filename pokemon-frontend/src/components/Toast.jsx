@@ -10,7 +10,7 @@ const Toast = ({ show, onClose, card }) => {
     if (show) {
       const timer = setTimeout(() => {
         onClose()
-      }, 4000) // Auto-dismiss after 4 seconds
+      }, 8000) // Auto-dismiss after 4 seconds
 
       return () => clearTimeout(timer)
     }
@@ -25,7 +25,7 @@ const Toast = ({ show, onClose, card }) => {
 
   return (
     <div className="fixed top-4 right-4 z-50 animate-slide-in">
-      <div className="bg-white rounded-lg shadow-2xl border border-gray-200 p-4 min-w-[320px] max-w-md">
+      <div className="bg-white rounded-lg shadow-2xl border border-gray-200 p-4 min-w-[375px] max-w-md">
         <div className="flex items-start gap-3">
           {/* Success Icon */}
           <div className="flex-shrink-0">

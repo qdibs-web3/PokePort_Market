@@ -144,9 +144,8 @@ async function createOrder(req, res) {
 
     await order.save();
 
-    // Update card stock
-    card.stockQuantity -= quantity;
-    await card.save();
+    // NOTE: Stock will be deducted when payment is confirmed, not here
+    // This prevents inventory locking without payment
 
     // Populate the order for response
     await order.populate('userId', 'username walletAddress');
