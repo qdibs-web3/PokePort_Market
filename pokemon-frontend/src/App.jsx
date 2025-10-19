@@ -14,6 +14,7 @@ import UserAccount from './components/UserAccount'
 import AdminPanel from './components/AdminPanel'
 import Explore from './components/pages/Explore';
 import { CartProvider } from './contexts/CartContext'
+import PikachuBackground from './components/PikachuBackground'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -91,7 +92,8 @@ function App() {
   return (
     <CartProvider>
       <Router>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 relative">
+          <PikachuBackground />
           <Header 
             user={user} 
             onConnectWallet={connectWallet} 
@@ -99,7 +101,7 @@ function App() {
             isConnecting={isConnecting}
           />
           
-          <main className="container mx-auto px-4 py-8">
+          <main className="container mx-auto px-4 py-8 relative z-10">
             <Routes>
               <Route path="/" element={<Explore />} />
 

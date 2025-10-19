@@ -14,7 +14,16 @@ module.exports = async (req, res) => {
   try {
     await connectToDatabase();
 
-    const { id } = req.query;
+    // Extract ID from URL path - try both req.query and URL parsing
+    let id = req.query.id;
+    
+    // If not in query, try to extract from URL
+    if (!id && req.url) {
+      const match = req.url.match(/\/api\/cards\/([^/?]+)/);
+      if (match && match[1]) {
+        id = match[1];
+      }
+    }
 
     if (!id) {
       return res.status(400).json({ error: 'Card ID is required' });
@@ -93,19 +102,19 @@ async function updateCard(req, res, id) {
     if (description !== undefined) updateData.description = description;
     if (price_eth !== undefined) updateData.priceEth = parseFloat(price_eth);
     if (image_url !== undefined) updateData.imageUrl = image_url;
-    if (rarity !== undefined) updateData.rarity = rarity;
+    if (rarity !== undefined) updateData.rarity = rarity || '';
     if (product_type !== undefined) updateData.productType = product_type;
     if (grading_company !== undefined) updateData.gradingCompany = grading_company;
     if (grade !== undefined) updateData.grade = grade;
     if (set_name !== undefined) updateData.setName = set_name;
     if (card_number !== undefined) updateData.cardNumber = card_number;
-    if (condition !== undefined) updateData.condition = condition;
+    if (condition !== undefined) updateData.condition = condition || '';
     if (stock_quantity !== undefined) updateData.stockQuantity = parseInt(stock_quantity);
     if (is_active !== undefined) updateData.isActive = is_active;
 
     updateData.updatedAt = new Date();
 
-    const card = await PokemonCard.findByIdAndUpdate(id, updateData, { new: true });
+    const card = await PokemonCard.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
     
     if (!card) {
       return res.status(404).json({ error: 'Card not found' });
@@ -133,6 +142,12 @@ async function updateCard(req, res, id) {
     return res.status(200).json(formattedCard);
   } catch (error) {
     console.error('Update card error:', error);
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ error: 'Validation failed', details: validationErrors });
+    }
+    
     return res.status(500).json({ error: 'Failed to update card' });
   }
 }

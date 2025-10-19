@@ -19,28 +19,33 @@ module.exports = async (req, res) => {
   try {
     await connectToDatabase();
 
-    console.log('User orders endpoint - req.query:', req.query);
-    console.log('User orders endpoint - req.params:', req.params);
+    // Extract wallet_address from URL path - try multiple methods
+    let wallet_address = req.query.wallet_address;
     
-    // Get wallet_address from either query or params
-    const wallet_address = req.query.wallet_address || req.params?.wallet_address;
+    // If not in query, try to extract from URL
+    if (!wallet_address && req.url) {
+      const match = req.url.match(/\/api\/orders\/user\/([^/?]+)/);
+      if (match && match[1]) {
+        wallet_address = match[1];
+      }
+    }
+    
     const { page = 1, per_page = 20 } = req.query;
     
     if (!wallet_address) {
-      console.log('ERROR: wallet_address is undefined!');
+      console.error('ERROR: wallet_address is undefined!');
       return res.status(400).json({ error: 'Wallet address is required' });
     }
-    
-    console.log('Using wallet_address:', wallet_address);
     
     const pageNum = parseInt(page);
     const perPage = parseInt(per_page);
     const skip = (pageNum - 1) * perPage;
 
-    // Find user by wallet address
+    // Find user by wallet address (case-insensitive)
     const user = await User.findOne({ walletAddress: wallet_address.toLowerCase() });
     
     if (!user) {
+      // User not found - return empty orders instead of error
       return res.status(200).json({
         orders: [],
         total: 0,
@@ -61,36 +66,47 @@ module.exports = async (req, res) => {
     const pages = Math.ceil(total / perPage);
 
     // Format orders to match frontend expectations
-    const formattedOrders = orders.map(order => ({
-      id: order._id,
-      user_id: order.userId._id,
-      card_id: order.cardId._id,
-      quantity: order.quantity,
-      total_price_eth: order.totalPriceEth,
-      transaction_hash: order.transactionHash,
-      status: order.status,
-      buyer_wallet_address: order.buyerWalletAddress,
-      created_at: order.createdAt,
-      updated_at: order.updatedAt,
-      user: {
+    const formattedOrders = orders.map(order => {
+      // Handle cases where populated fields might be null
+      const userInfo = order.userId ? {
         id: order.userId._id,
-        username: order.userId.username,
-        wallet_address: order.userId.walletAddress
-      },
-      card: order.cardId ? {
+        username: order.userId.username || 'Unknown',
+        wallet_address: order.userId.walletAddress || ''
+      } : {
+        id: null,
+        username: 'Unknown',
+        wallet_address: ''
+      };
+
+      const cardInfo = order.cardId ? {
         id: order.cardId._id,
-        name: order.cardId.name,
-        description: order.cardId.description,
-        price_eth: order.cardId.priceEth,
-        image_url: order.cardId.imageUrl,
-        rarity: order.cardId.rarity,
-        set_name: order.cardId.setName,
-        card_number: order.cardId.cardNumber,
-        condition: order.cardId.condition,
-        stock_quantity: order.cardId.stockQuantity,
-        is_active: order.cardId.isActive
-      } : null
-    }));
+        name: order.cardId.name || 'Unknown Card',
+        description: order.cardId.description || '',
+        price_eth: order.cardId.priceEth || 0,
+        image_url: order.cardId.imageUrl || '',
+        rarity: order.cardId.rarity || '',
+        set_name: order.cardId.setName || '',
+        card_number: order.cardId.cardNumber || '',
+        condition: order.cardId.condition || '',
+        stock_quantity: order.cardId.stockQuantity || 0,
+        is_active: order.cardId.isActive !== undefined ? order.cardId.isActive : true
+      } : null;
+
+      return {
+        id: order._id,
+        user_id: order.userId?._id || null,
+        card_id: order.cardId?._id || null,
+        quantity: order.quantity || 1,
+        total_price_eth: order.totalPriceEth || 0,
+        transaction_hash: order.transactionHash || '',
+        status: order.status || 'pending',
+        buyer_wallet_address: order.buyerWalletAddress || '',
+        created_at: order.createdAt,
+        updated_at: order.updatedAt,
+        user: userInfo,
+        card: cardInfo
+      };
+    });
 
     return res.status(200).json({
       orders: formattedOrders,
@@ -100,6 +116,10 @@ module.exports = async (req, res) => {
     });
   } catch (error) {
     console.error('Get user orders error:', error);
-    return res.status(500).json({ error: 'Failed to fetch user orders' });
+    console.error('Error stack:', error.stack);
+    return res.status(500).json({ 
+      error: 'Failed to fetch user orders',
+      details: error.message 
+    });
   }
 };

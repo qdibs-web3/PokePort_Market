@@ -28,6 +28,8 @@ const AdminPanel = ({ user, onCardUpdate }) => {
   const [showAddCard, setShowAddCard] = useState(false)
   const [editingCard, setEditingCard] = useState(null)
   const [productFormTab, setProductFormTab] = useState('card') // 'card' or 'gc' (graded card)
+  const [adminWallets, setAdminWallets] = useState(['0xf08d3184c50a1B255507785F71c9330034852Cd5'])
+  const [newWallet, setNewWallet] = useState('')
   const [newCard, setNewCard] = useState({
     name: '',
     description: '',
@@ -844,51 +846,119 @@ const AdminPanel = ({ user, onCardUpdate }) => {
           <div className="space-y-6">
             <h2 className="text-xl font-semibold">Order Management</h2>
             
-            <div className="space-y-4">
-              {orders.map((order) => (
-                <Card key={order.id}>
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="font-semibold">Order #{order.id}</h3>
-                        <p className="text-sm text-gray-600">
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Customer: {order.user?.username || 'Unknown'}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold">{order.total_price_eth} ETH</p>
-                        <select
-                          value={order.status}
-                          onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                          className="mt-2 px-3 py-1 border border-gray-300 rounded-md text-sm"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="confirmed">Confirmed</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-                      </div>
-                    </div>
-                    
-                    <div className="text-sm text-gray-600">
-                      {order.card && (
-                        <p><span className="font-medium">Card:</span> {order.card.name}</p>
-                      )}
-                      <p><span className="font-medium">Quantity:</span> {order.quantity}</p>
-                      {order.transaction_hash && (
-                        <p><span className="font-medium">TX Hash:</span> 
-                          <span className="font-mono text-xs">{order.transaction_hash.slice(0, 10)}...</span>
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {/* Order Status Tabs */}
+            <Tabs defaultValue="in-progress" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="in-progress">In Progress</TabsTrigger>
+                <TabsTrigger value="completed">Completed</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="in-progress" className="space-y-4 mt-4">
+                {orders.filter(order => order.status === 'pending' || order.status === 'confirmed').length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Package className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                    <p>No in-progress orders</p>
+                  </div>
+                ) : (
+                  orders.filter(order => order.status === 'pending' || order.status === 'confirmed').map((order) => (
+                    <Card key={order.id}>
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="font-semibold">Order #{order.id}</h3>
+                            <p className="text-sm text-gray-600">
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Customer: {order.user?.username || 'Unknown'}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">{order.total_price_eth} ETH</p>
+                            <select
+                              value={order.status}
+                              onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                              className="mt-2 px-3 py-1 border border-gray-300 rounded-md text-sm"
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="shipped">Shipped</option>
+                              <option value="delivered">Delivered</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                          </div>
+                        </div>
+                        
+                        <div className="text-sm text-gray-600">
+                          {order.card && (
+                            <p><span className="font-medium">Card:</span> {order.card.name}</p>
+                          )}
+                          <p><span className="font-medium">Quantity:</span> {order.quantity}</p>
+                          {order.transaction_hash && (
+                            <p><span className="font-medium">TX Hash:</span> 
+                              <span className="font-mono text-xs">{order.transaction_hash.slice(0, 10)}...</span>
+                            </p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </TabsContent>
+
+              <TabsContent value="completed" className="space-y-4 mt-4">
+                {orders.filter(order => order.status === 'shipped' || order.status === 'delivered' || order.status === 'cancelled').length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Package className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                    <p>No completed orders</p>
+                  </div>
+                ) : (
+                  orders.filter(order => order.status === 'shipped' || order.status === 'delivered' || order.status === 'cancelled').map((order) => (
+                    <Card key={order.id}>
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="font-semibold">Order #{order.id}</h3>
+                            <p className="text-sm text-gray-600">
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Customer: {order.user?.username || 'Unknown'}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">{order.total_price_eth} ETH</p>
+                            <select
+                              value={order.status}
+                              onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                              className="mt-2 px-3 py-1 border border-gray-300 rounded-md text-sm"
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="shipped">Shipped</option>
+                              <option value="delivered">Delivered</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                          </div>
+                        </div>
+                        
+                        <div className="text-sm text-gray-600">
+                          {order.card && (
+                            <p><span className="font-medium">Card:</span> {order.card.name}</p>
+                          )}
+                          <p><span className="font-medium">Quantity:</span> {order.quantity}</p>
+                          {order.transaction_hash && (
+                            <p><span className="font-medium">TX Hash:</span> 
+                              <span className="font-mono text-xs">{order.transaction_hash.slice(0, 10)}...</span>
+                            </p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
         </TabsContent>
 
@@ -903,14 +973,69 @@ const AdminPanel = ({ user, onCardUpdate }) => {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <Label>Admin Wallet Address</Label>
-                  <Input 
-                    value="0xf08d3184c50a1B255507785F71c9330034852Cd5" 
-                    readOnly 
-                    className="font-mono text-sm"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    This is where customer payments will be sent
+                  <Label>Admin Wallet Addresses</Label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Customer payments will be sent to these addresses
+                  </p>
+                  
+                  {/* List of wallet addresses */}
+                  <div className="space-y-2 mb-3">
+                    {adminWallets.map((wallet, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Input 
+                          value={wallet}
+                          onChange={(e) => {
+                            const newWallets = [...adminWallets];
+                            newWallets[index] = e.target.value;
+                            setAdminWallets(newWallets);
+                          }}
+                          className="font-mono text-sm flex-1"
+                          placeholder="0x..."
+                        />
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            if (adminWallets.length > 1) {
+                              setAdminWallets(adminWallets.filter((_, i) => i !== index));
+                            } else {
+                              alert('You must have at least one admin wallet address');
+                            }
+                          }}
+                          disabled={adminWallets.length === 1}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Add new wallet */}
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={newWallet}
+                      onChange={(e) => setNewWallet(e.target.value)}
+                      placeholder="Add new wallet address (0x...)"
+                      className="font-mono text-sm flex-1"
+                    />
+                    <Button
+                      onClick={() => {
+                        if (newWallet.trim() && newWallet.startsWith('0x')) {
+                          setAdminWallets([...adminWallets, newWallet.trim()]);
+                          setNewWallet('');
+                        } else {
+                          alert('Please enter a valid Ethereum wallet address starting with 0x');
+                        }
+                      }}
+                      disabled={!newWallet.trim()}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                  
+                  <p className="text-xs text-gray-500 mt-2">
+                    Note: Changes are stored in browser state. For production, implement backend storage.
                   </p>
                 </div>
               </div>

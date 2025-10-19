@@ -73,23 +73,11 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
         card={toastCard}
       />
 
-      {/* Search and Filters */}
-      <div className="mb-8 space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <Input
-              placeholder="Search Pokemon..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-
-        {/* Filter Section */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4">
-          <div className="flex items-center justify-between">
+      {/* Compact Filter Section */}
+      <div className="mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
             <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
               <Filter className="w-4 h-4" />
               Filters
@@ -98,131 +86,137 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
               variant="ghost" 
               size="sm" 
               onClick={clearFilters}
-              className="text-xs"
+              className="text-xs h-7"
             >
               <X className="w-3 h-3 mr-1" />
               Clear All
             </Button>
           </div>
 
-          {/* Product Type Filter Buttons */}
-          <div>
-            <label className="text-xs font-medium text-gray-600 mb-2 block">Product Type</label>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={selectedProductType === '' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedProductType('')}
-                className="text-xs"
-              >
-                All
-              </Button>
-              {productTypes.map((type) => (
-                <Button
-                  key={type}
-                  variant={selectedProductType === type ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedProductType(type)}
-                  className="text-xs"
-                >
-                  {type}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Rarity Filter */}
-          {rarities.length > 0 && (
-            <div>
-              <label className="text-xs font-medium text-gray-600 mb-2 block">Rarity</label>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={selectedRarity === '' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedRarity('')}
-                  className="text-xs"
-                >
-                  All
-                </Button>
-                {rarities.map((rarity) => (
-                  <Button
-                    key={rarity}
-                    variant={selectedRarity === rarity ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedRarity(rarity)}
-                    className="text-xs"
-                  >
-                    {rarity}
-                  </Button>
-                ))}
+          {/* Filter Content - Compact Grid Layout */}
+          <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Search Box */}
+            <div className="lg:col-span-2">
+              <label className="text-xs font-medium text-gray-600 mb-1.5 block">Search</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search Pokemon..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 h-9 text-sm"
+                />
               </div>
             </div>
-          )}
 
-          {/* Price Range Filter */}
-          <div>
-            <label className="text-xs font-medium text-gray-600 mb-2 block">Price Range (ETH)</label>
-            <div className="flex gap-2 items-center">
-              <Input
-                type="number"
-                step="0.001"
-                placeholder="Min"
-                value={priceRange.min}
-                onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
-                className="text-sm"
-              />
-              <span className="text-gray-400">-</span>
-              <Input
-                type="number"
-                step="0.001"
-                placeholder="Max"
-                value={priceRange.max}
-                onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
-                className="text-sm"
-              />
+            {/* Price Range Filter */}
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1.5 block">Price Range (ETH)</label>
+              <div className="flex gap-2 items-center">
+                <Input
+                  type="number"
+                  step="0.001"
+                  placeholder="Min"
+                  value={priceRange.min}
+                  onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                  className="text-sm h-9"
+                />
+                <span className="text-gray-400 text-xs">-</span>
+                <Input
+                  type="number"
+                  step="0.001"
+                  placeholder="Max"
+                  value={priceRange.max}
+                  onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                  className="text-sm h-9"
+                />
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Active Filters Display */}
-        {(selectedProductType || selectedRarity || priceRange.min || priceRange.max) && (
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-xs text-gray-600">Active filters:</span>
-            {selectedProductType && (
-              <Badge variant="secondary" className="text-xs">
-                Type: {selectedProductType}
-                <button 
-                  onClick={() => setSelectedProductType('')}
-                  className="ml-1 hover:text-red-600"
+            {/* Product Type Filter - Compact */}
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1.5 block">Product Type</label>
+              <select
+                value={selectedProductType}
+                onChange={(e) => setSelectedProductType(e.target.value)}
+                className="w-full h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Types</option>
+                {productTypes.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Rarity Filter - Compact */}
+            {rarities.length > 0 && (
+              <div className="md:col-span-2 lg:col-span-1">
+                <label className="text-xs font-medium text-gray-600 mb-1.5 block">Rarity</label>
+                <select
+                  value={selectedRarity}
+                  onChange={(e) => setSelectedRarity(e.target.value)}
+                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  ×
-                </button>
-              </Badge>
-            )}
-            {selectedRarity && (
-              <Badge variant="secondary" className="text-xs">
-                Rarity: {selectedRarity}
-                <button 
-                  onClick={() => setSelectedRarity('')}
-                  className="ml-1 hover:text-red-600"
-                >
-                  ×
-                </button>
-              </Badge>
-            )}
-            {(priceRange.min || priceRange.max) && (
-              <Badge variant="secondary" className="text-xs">
-                Price: {priceRange.min || '0'} - {priceRange.max || '∞'} ETH
-                <button 
-                  onClick={() => setPriceRange({ min: '', max: '' })}
-                  className="ml-1 hover:text-red-600"
-                >
-                  ×
-                </button>
-              </Badge>
+                  <option value="">All Rarities</option>
+                  {rarities.map((rarity) => (
+                    <option key={rarity} value={rarity}>{rarity}</option>
+                  ))}
+                </select>
+              </div>
             )}
           </div>
-        )}
+
+          {/* Active Filters Display */}
+          {(selectedProductType || selectedRarity || priceRange.min || priceRange.max || searchTerm) && (
+            <div className="px-4 pb-3 flex flex-wrap gap-2 items-center border-t border-gray-100 pt-3">
+              <span className="text-xs text-gray-600 font-medium">Active:</span>
+              {searchTerm && (
+                <Badge variant="secondary" className="text-xs">
+                  Search: {searchTerm}
+                  <button 
+                    onClick={() => setSearchTerm('')}
+                    className="ml-1 hover:text-red-600"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              {selectedProductType && (
+                <Badge variant="secondary" className="text-xs">
+                  Type: {selectedProductType}
+                  <button 
+                    onClick={() => setSelectedProductType('')}
+                    className="ml-1 hover:text-red-600"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              {selectedRarity && (
+                <Badge variant="secondary" className="text-xs">
+                  Rarity: {selectedRarity}
+                  <button 
+                    onClick={() => setSelectedRarity('')}
+                    className="ml-1 hover:text-red-600"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              {(priceRange.min || priceRange.max) && (
+                <Badge variant="secondary" className="text-xs">
+                  Price: {priceRange.min || '0'} - {priceRange.max || '∞'} ETH
+                  <button 
+                    onClick={() => setPriceRange({ min: '', max: '' })}
+                    className="ml-1 hover:text-red-600"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Cards Grid */}

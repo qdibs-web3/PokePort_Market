@@ -22,7 +22,11 @@ const pokemonCardSchema = new mongoose.Schema({
   },
   rarity: {
     type: String,
-    enum: ['Common', 'Uncommon', 'Rare', 'Ultra Rare', 'Legendary']
+    enum: {
+      values: ['Common', 'Uncommon', 'Rare', 'Ultra Rare', 'Legendary', ''],
+      message: '{VALUE} is not a valid rarity'
+    },
+    default: ''
   },
   productType: {
     type: String,
@@ -43,7 +47,11 @@ const pokemonCardSchema = new mongoose.Schema({
   },
   condition: {
     type: String,
-    enum: ['Mint', 'Near Mint', 'Lightly Played', 'Moderately Played', 'Heavily Played']
+    enum: {
+      values: ['Mint', 'Near Mint', 'Lightly Played', 'Moderately Played', 'Heavily Played', ''],
+      message: '{VALUE} is not a valid condition'
+    },
+    default: ''
   },
   stockQuantity: {
     type: Number,

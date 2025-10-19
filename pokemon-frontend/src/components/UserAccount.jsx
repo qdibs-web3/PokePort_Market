@@ -500,8 +500,20 @@ const UserAccount = ({ user }) => {
                   <p className="text-gray-600">Start shopping to see your orders here!</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {orders.map((order) => (
+                <Tabs defaultValue="in-progress" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="in-progress">In Progress</TabsTrigger>
+                    <TabsTrigger value="completed">Completed</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="in-progress" className="space-y-4 mt-4">
+                    {orders.filter(order => order.status === 'pending' || order.status === 'confirmed').length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <Package className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                        <p>No in-progress orders</p>
+                      </div>
+                    ) : (
+                      orders.filter(order => order.status === 'pending' || order.status === 'confirmed').map((order) => (
                     <div key={order.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                       <div className="flex items-start justify-between mb-3">
                         <div>
@@ -551,9 +563,73 @@ const UserAccount = ({ user }) => {
                           TX: {order.transaction_hash}
                         </div>
                       )}
-                    </div>
-                  ))}
-                </div>
+                        </div>
+                      ))
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="completed" className="space-y-4 mt-4">
+                    {orders.filter(order => order.status === 'shipped' || order.status === 'delivered' || order.status === 'cancelled').length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <Package className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                        <p>No completed orders</p>
+                      </div>
+                    ) : (
+                      orders.filter(order => order.status === 'shipped' || order.status === 'delivered' || order.status === 'cancelled').map((order) => (
+                        <div key={order.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h4 className="font-semibold text-gray-900">
+                                Order #{order.id}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                {formatDate(order.created_at)}
+                              </p>
+                            </div>
+                            <Badge className={`flex items-center space-x-1 ${getStatusColor(order.status)}`}>
+                              {getStatusIcon(order.status)}
+                              <span className="capitalize">{order.status}</span>
+                            </Badge>
+                          </div>
+                          
+                          {order.card && (
+                            <div className="flex items-center space-x-4 mb-3">
+                              <div className="w-16 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded flex items-center justify-center">
+                                {order.card.image_url ? (
+                                  <img 
+                                    src={order.card.image_url} 
+                                    alt={order.card.name}
+                                    className="w-full h-full object-cover rounded"
+                                  />
+                                ) : (
+                                  <Package className="w-6 h-6 text-gray-400" />
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <h5 className="font-medium text-gray-900">{order.card.name}</h5>
+                                <p className="text-sm text-gray-600">Quantity: {order.quantity}</p>
+                                <p className="text-sm text-gray-600">
+                                  {order.card.set_name} • {order.card.condition}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold text-blue-600">
+                                  {order.total_price_eth} ETH
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {order.transaction_hash && (
+                            <div className="text-xs text-gray-500 font-mono bg-gray-50 p-2 rounded">
+                              TX: {order.transaction_hash}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </TabsContent>
+                </Tabs>
               )}
             </CardContent>
           </Card>

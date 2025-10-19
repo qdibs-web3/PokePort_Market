@@ -143,19 +143,23 @@ async function createCard(req, res) {
       imageUrls.unshift(image_url);
     }
 
+    // Normalize rarity and condition to empty string if undefined or null
+    const normalizedRarity = rarity && rarity.trim() !== '' ? rarity.trim() : '';
+    const normalizedCondition = condition && condition.trim() !== '' ? condition.trim() : '';
+
     const card = new PokemonCard({
       name: name.trim(),
-      description: description?.trim(),
+      description: description?.trim() || '',
       priceEth: parseFloat(price_eth),
-      imageUrl: image_url?.trim(), // Keep for backward compatibility
+      imageUrl: image_url?.trim() || '', // Keep for backward compatibility
       imageUrls: imageUrls, // New multiple images field
-      rarity,
+      rarity: normalizedRarity,
       productType: product_type || 'Card',
-      gradingCompany: grading_company?.trim(),
-      grade: grade?.trim(),
-      setName: set_name?.trim(),
-      cardNumber: card_number?.trim(),
-      condition,
+      gradingCompany: grading_company?.trim() || '',
+      grade: grade?.trim() || '',
+      setName: set_name?.trim() || '',
+      cardNumber: card_number?.trim() || '',
+      condition: normalizedCondition,
       stockQuantity: parseInt(stock_quantity) || 1
     });
 
