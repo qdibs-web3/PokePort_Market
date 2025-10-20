@@ -58,7 +58,7 @@ module.exports = async (req, res) => {
 
     // Verify transaction on blockchain
     const adminWallet = process.env.ADMIN_WALLET_ADDRESS || '0xf08d3184c50a1B255507785F71c9330034852Cd5';
-    const rpcUrl = process.env.ETH_RPC_URL || 'https://eth-mainnet.g.alchemy.com/v2/demo'; // Using demo endpoint
+    const rpcUrl = process.env.ETH_RPC_URL || 'https://base-mainnet.g.alchemy.com/v2/xNtGOLnxWWtbHSp7B92vX'; // Using demo endpoint
 
     try {
       const provider = new ethers.JsonRpcProvider(rpcUrl);

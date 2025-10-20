@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import '../celebration-animations.css'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Button } from '@/components/ui/button.jsx'
@@ -16,6 +17,9 @@ const UserAccount = ({ user }) => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [showCelebration, setShowCelebration] = useState(false)
+  const [purchasedItems, setPurchasedItems] = useState([])
+  const [transactionHash, setTransactionHash] = useState('')
   const { items, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart()
   
   // Update active tab when location state changes
@@ -141,7 +145,16 @@ const UserAccount = ({ user }) => {
         }),
       })
 
-      alert('Purchase successful! Transaction hash: ' + txHash)
+      // Show celebration popup
+      setPurchasedItems([...items])
+      setTransactionHash(txHash)
+      setShowCelebration(true)
+      
+      // Auto-hide after 8 seconds
+      setTimeout(() => {
+        setShowCelebration(false)
+      }, 8000)
+      
       clearCart()
       setCheckoutForm({
         name: '',
@@ -205,11 +218,110 @@ const UserAccount = ({ user }) => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Account</h1>
-        <p className="text-gray-600">Manage your profile and view your order history</p>
-      </div>
+    <>
+      {/* Celebration Popup */}
+      {showCelebration && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowCelebration(false)}></div>
+          
+          {/* Confetti Animation */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {[...Array(50)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute animate-confetti"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: '-10px',
+                  animationDelay: `${Math.random() * 0.5}s`,
+                  animationDuration: `${2 + Math.random() * 2}s`,
+                }}
+              >
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{
+                    backgroundColor: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'][Math.floor(Math.random() * 6)],
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+          
+          {/* Popup Card */}
+          <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 animate-bounce-in">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowCelebration(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
+            >
+              ×
+            </button>
+            
+            {/* Success Icon */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
+                <CheckCircle className="w-12 h-12 text-green-500" />
+              </div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">🎉 Purchase Successful!</h2>
+              <p className="text-gray-600">Your order has been confirmed</p>
+            </div>
+            
+            {/* Order Summary */}
+            <div className="bg-gray-50 rounded-lg p-4 mb-6 max-h-48 overflow-y-auto">
+              <h3 className="font-semibold text-gray-900 mb-3">Order Summary:</h3>
+              {purchasedItems.map((item, index) => (
+                <div key={index} className="flex items-center justify-between mb-2 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <Package className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-700">{item.name}</span>
+                  </div>
+                  <span className="text-gray-600">x{item.quantity}</span>
+                </div>
+              ))}
+              
+              {/* Transaction Hash */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-xs text-gray-500 mb-1">Transaction:</p>
+                <a
+                  href={`https://etherscan.io/tx/${transactionHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 font-mono text-xs underline break-all"
+                >
+                  {transactionHash}
+                </a>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex space-x-3">
+              <Button
+                onClick={() => {
+                  setShowCelebration(false)
+                  setActiveTab('orders')
+                }}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                View Orders
+              </Button>
+              <Button
+                onClick={() => setShowCelebration(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Account</h1>
+          <p className="text-gray-600">Manage your profile and view your order history</p>
+        </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
@@ -559,7 +671,7 @@ const UserAccount = ({ user }) => {
                       )}
                       
                       {order.transaction_hash && (
-                        <div className="text-xs bg-gray-50 p-2 rounded">
+                        <div className="text-xs bg-gray-50 p-2 rounded mb-2">
                           <span className="text-gray-500">Transaction: </span>
                           <a 
                             href={`https://etherscan.io/tx/${order.transaction_hash}`}
@@ -570,6 +682,19 @@ const UserAccount = ({ user }) => {
                             {order.transaction_hash.slice(0, 10)}...{order.transaction_hash.slice(-8)}
                           </a>
                           <span className="text-gray-400 ml-2 text-xs">↗ View on Etherscan</span>
+                        </div>
+                      )}
+                      
+                      {order.customer_info && (
+                        <div className="text-xs bg-blue-50 p-3 rounded border border-blue-200">
+                          <p className="font-semibold text-gray-700 mb-1">📦 Shipping Information:</p>
+                          <p className="text-gray-600">{order.customer_info.name}</p>
+                          <p className="text-gray-600">{order.customer_info.address}</p>
+                          <p className="text-gray-600">{order.customer_info.city}, {order.customer_info.state} {order.customer_info.zipCode}</p>
+                          <p className="text-gray-600">{order.customer_info.country}</p>
+                          {order.customer_info.phone && (
+                            <p className="text-gray-600 mt-1">📞 {order.customer_info.phone}</p>
+                          )}
                         </div>
                       )}
                         </div>
@@ -630,7 +755,7 @@ const UserAccount = ({ user }) => {
                           )}
                           
                           {order.transaction_hash && (
-                            <div className="text-xs bg-gray-50 p-2 rounded">
+                            <div className="text-xs bg-gray-50 p-2 rounded mb-2">
                               <span className="text-gray-500">Transaction: </span>
                               <a 
                                 href={`https://etherscan.io/tx/${order.transaction_hash}`}
@@ -641,6 +766,19 @@ const UserAccount = ({ user }) => {
                                 {order.transaction_hash.slice(0, 10)}...{order.transaction_hash.slice(-8)}
                               </a>
                               <span className="text-gray-400 ml-2 text-xs">↗ View on Etherscan</span>
+                            </div>
+                          )}
+                          
+                          {order.customer_info && (
+                            <div className="text-xs bg-blue-50 p-3 rounded border border-blue-200">
+                              <p className="font-semibold text-gray-700 mb-1">📦 Shipping Information:</p>
+                              <p className="text-gray-600">{order.customer_info.name}</p>
+                              <p className="text-gray-600">{order.customer_info.address}</p>
+                              <p className="text-gray-600">{order.customer_info.city}, {order.customer_info.state} {order.customer_info.zipCode}</p>
+                              <p className="text-gray-600">{order.customer_info.country}</p>
+                              {order.customer_info.phone && (
+                                <p className="text-gray-600 mt-1">📞 {order.customer_info.phone}</p>
+                              )}
                             </div>
                           )}
                         </div>
@@ -654,7 +792,7 @@ const UserAccount = ({ user }) => {
         </TabsContent>
       </Tabs>
     </div>
+    </>
   )
 }
-
 export default UserAccount
