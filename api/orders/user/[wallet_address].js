@@ -101,6 +101,7 @@ module.exports = async (req, res) => {
         transaction_hash: order.transactionHash || '',
         status: order.status || 'pending',
         buyer_wallet_address: order.buyerWalletAddress || '',
+        customer_info: order.customerInfo || null,
         created_at: order.createdAt,
         updated_at: order.updatedAt,
         user: userInfo,

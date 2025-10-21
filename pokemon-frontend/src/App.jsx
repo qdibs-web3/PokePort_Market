@@ -126,7 +126,7 @@ function App() {
               } />
               
               <Route path="/account" element={
-                <UserAccount user={user} />
+                <UserAccount user={user} onCardPurchase={loadCards} />
               } />
               
               <Route path="/admin" element={

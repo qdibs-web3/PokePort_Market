@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.j
 import { User, Package, Clock, CheckCircle, Truck, XCircle, ShoppingCart, Trash2, Plus, Minus } from 'lucide-react'
 import { useCart } from '../contexts/CartContext'
 
-const UserAccount = ({ user }) => {
+const UserAccount = ({ user, onCardPurchase }) => {
   const location = useLocation()
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'profile')
   const [orders, setOrders] = useState([])
@@ -167,6 +167,9 @@ const UserAccount = ({ user }) => {
         phone: ''
       })
       loadUserOrders() // Refresh orders
+      if (onCardPurchase) {
+        onCardPurchase() // Refresh card stock on market page
+      }
     } catch (error) {
       console.error('Checkout error:', error)
       alert('Checkout failed: ' + error.message)

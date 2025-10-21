@@ -101,7 +101,7 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="Search Pokemon..."
+                  placeholder="Search Product..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9 h-9 text-sm"
@@ -147,23 +147,6 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                 ))}
               </select>
             </div>
-
-            {/* Rarity Filter - Compact */}
-            {rarities.length > 0 && (
-              <div className="md:col-span-2 lg:col-span-1">
-                <label className="text-xs font-medium text-gray-600 mb-1.5 block">Rarity</label>
-                <select
-                  value={selectedRarity}
-                  onChange={(e) => setSelectedRarity(e.target.value)}
-                  className="w-full h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">All Rarities</option>
-                  {rarities.map((rarity) => (
-                    <option key={rarity} value={rarity}>{rarity}</option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
 
           {/* Active Filters Display */}
