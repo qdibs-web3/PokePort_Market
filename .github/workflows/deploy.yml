@@ -44,7 +44,7 @@ jobs:
           sudo systemctl stop nginx
           sudo rm -rf /usr/share/nginx/html/*
           sudo cp -r dist/* /usr/share/nginx/html/
-          sudo chown -R www-data:www-data /usr/share/nginx/html/
+          sudo chown -R nginx:nginx /usr/share/nginx/html/
           sudo chmod -R 755 /usr/share/nginx/html/
           sudo systemctl start nginx
 
