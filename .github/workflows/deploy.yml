@@ -7,7 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Deploy to EC2
       uses: appleboy/ssh-action@master
@@ -16,33 +16,40 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
+          set -e
+          echo "🚀 Starting deployment on EC2..."
+
           # Navigate to project
           cd ~/PokePort_Market
-          
-          # Pull latest code
-          git pull origin main
-          
-          # Update backend dependencies
+
+          # Force sync with GitHub main branch
+          echo "🔄 Syncing repository with origin/main..."
+          git fetch origin main
+          git reset --hard origin/main
+          echo "✅ Repo synced successfully."
+
+          # Backend setup
+          echo "📦 Installing backend dependencies..."
           cd api
-          npm install --production
-          
-          # Update frontend
+          npm ci --only=production
+
+          # Frontend setup
+          echo "🎨 Building frontend..."
           cd ../pokemon-frontend
-          npm install
+          npm ci
           npm run build
-          
-          # Remove old files and copy new ones to Nginx
+
+          # Deploy to Nginx
+          echo "🧹 Cleaning old files and updating Nginx..."
+          sudo systemctl stop nginx
           sudo rm -rf /usr/share/nginx/html/*
           sudo cp -r dist/* /usr/share/nginx/html/
-          
-          # Set proper permissions
           sudo chown -R www-data:www-data /usr/share/nginx/html/
           sudo chmod -R 755 /usr/share/nginx/html/
-          
-          # Restart Nginx to clear cache and serve new files
-          sudo systemctl restart nginx
-          
+          sudo systemctl start nginx
+
           # Restart backend
+          echo "🔁 Restarting backend service..."
           pm2 restart pokeport-api
-          
+
           echo "✅ Deployment completed successfully!"
