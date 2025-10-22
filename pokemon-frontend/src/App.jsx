@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { Wallet, Search, ShoppingCart, User, Settings } from 'lucide-react'
+import plogo from '/src/assets/plogo.png';
 import './App.css'
 
 // Components
@@ -108,11 +109,15 @@ function App() {
               <Route path="/market" element={
                 <div>
                   <div className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                      Pokemon Market
+                    <h1 className="text-4xl font-bold text-gray-900 mb-4 flex justify-center">
+                      <img
+                        src={plogo}
+                        alt="Pokemon Market Logo"
+                        className="h-16 w-auto object-contain"
+                      />
                     </h1>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                      Discover and collect authentic Pokemon cards via crypto. 
+                      Discover and collect authentic Pokemon cards and unique pieces via crypto.
                     </p>
                   </div>
                   
