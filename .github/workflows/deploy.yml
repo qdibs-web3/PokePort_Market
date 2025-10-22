@@ -31,8 +31,16 @@ jobs:
           npm install
           npm run build
           
-          # Copy frontend to Nginx
+          # Remove old files and copy new ones to Nginx
+          sudo rm -rf /usr/share/nginx/html/*
           sudo cp -r dist/* /usr/share/nginx/html/
+          
+          # Set proper permissions
+          sudo chown -R www-data:www-data /usr/share/nginx/html/
+          sudo chmod -R 755 /usr/share/nginx/html/
+          
+          # Restart Nginx to clear cache and serve new files
+          sudo systemctl restart nginx
           
           # Restart backend
           pm2 restart pokeport-api
