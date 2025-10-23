@@ -349,27 +349,29 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                 </div>
 
                 {card.product_type && (
-                  <Badge className="absolute top-2 left-2 text-xs px-2 py-1 rounded-full shadow-lg bg-indigo-500 text-white">
+                  <Badge className="absolute top-1.5 left-1.5 text-[10px] px-1.5 py-0.5 rounded-md shadow-md bg-indigo-500 text-white">
                     {card.product_type}
                   </Badge>
                 )}
 
                 {card.condition && (
                   <Badge
-                    className={`absolute top-2 right-2 text-xs px-2 py-1 rounded-full shadow-lg
-                      ${card.condition.toLowerCase() === 'mint' ? 'bg-green-500 text-white' :
+                    className={`absolute top-1.5 right-1.5 text-[10px] px-1.5 py-0.5 rounded-md shadow-md
+                      ${
+                        card.condition.toLowerCase() === 'mint' ? 'bg-green-500 text-white' :
                         card.condition.toLowerCase() === 'near mint' ? 'bg-blue-500 text-white' :
                         card.condition.toLowerCase() === 'lightly played' ? 'bg-purple-500 text-white' :
                         card.condition.toLowerCase() === 'moderately played' ? 'bg-yellow-500 text-black' :
                         card.condition.toLowerCase() === 'heavily played' ? 'bg-red-500 text-white' :
-                        'bg-gray-400 text-white'}`}
+                        'bg-gray-400 text-white'
+                      }`}
                   >
                     {card.condition}
                   </Badge>
                 )}
               </CardHeader>
 
-              <CardContent className="-mt-6 pb-0 px-2 sm:px-3 space-y-0">
+              <CardContent className="-mt-6 pb-0 px-2 sm:px-3 space-y-1">
                 <CardTitle className="text-sm sm:text-m font-bold text-gray-900 line-clamp-1 mt-1">
                   {card.name}
                 </CardTitle>

@@ -11,7 +11,7 @@ const PikachuBackground = () => {
         for (let i = 0; i < count; i++) {
             newPikachus.push({
             id: i,
-            startY: 80, // Near the bottom
+            startY: 90, // Near the bottom
             duration: 15,
             delay: 0,
             size: 150,
