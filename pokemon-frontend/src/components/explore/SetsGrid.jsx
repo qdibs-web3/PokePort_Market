@@ -2,7 +2,7 @@
 
 const SetsGrid = ({ sets = [], selectedSet, onSetClick }) => {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2">
       {sets.length === 0 ? (
         <div className="col-span-full text-center text-gray-500">
           No sets available
@@ -23,7 +23,7 @@ const SetsGrid = ({ sets = [], selectedSet, onSetClick }) => {
                 <img
                   src={logoUrl}
                   alt={`${set.name} logo`}
-                  className="w-28 h-20 object-contain mb-2"
+                  className="w-28 h-24 object-contain mb-1"
                   onError={(e) => {
                     e.currentTarget.onerror = null;
                     e.currentTarget.src = `${set.logo}.webp`;

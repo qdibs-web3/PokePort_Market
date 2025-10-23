@@ -11,7 +11,7 @@ export default function SeriesGrid({ series = [], loading = false, onSeriesClick
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2">
       {series.map((s) => {
         // Check if this series is selected by comparing IDs
         const isSelected = selected && selected.id === s.id;

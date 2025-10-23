@@ -369,14 +369,14 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                 )}
               </CardHeader>
 
-              <CardContent className="-mt-5 pb-2 px-2 sm:px-3 space-y-1">
+              <CardContent className="-mt-6 pb-0 px-2 sm:px-3 space-y-0">
                 <CardTitle className="text-sm sm:text-m font-bold text-gray-900 line-clamp-1 mt-1">
                   {card.name}
                 </CardTitle>
 
                 <span className="text-base sm:text-l font-bold text-blue-600">{card.price_eth} ETH</span>
 
-                <div className="grid grid-cols-1 gap-1 text-xs sm:text-sm text-gray-600">
+                <div className="grid grid-cols-1 gap-0 text-xs sm:text-sm text-gray-600">
                   {card.product_type === 'Graded Card' && card.grading_company && (
                     <div>
                       <span className="font-medium">Grade:</span> {card.grading_company} {card.grade}
@@ -410,13 +410,15 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                   disabled={!user || card.stock_quantity === 0}
                   className="w-full bg-gradient-to-r from-blue-500 via-purple-600 to-pink-500 
                             hover:from-blue-600 hover:via-purple-700 hover:to-pink-600 
-                            text-white font-semibold py-2 h-8 sm:h-10 rounded-xl shadow-lg 
-                            transition-all duration-300 flex items-center justify-center gap-1 text-xs sm:text-sm"
+                            text-white font-semibold py-1 h-8 sm:h-9 rounded-xl shadow-lg 
+                            transition-all duration-300 flex items-center justify-center gap-1 text-xs sm:text-sm
+                            -mt-[2px]"
                 >
                   <ShoppingCart className="w-3 h-3 mr-1" />
                   {!user ? 'Connect Wallet' : card.stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
                 </Button>
               </CardFooter>
+
             </Card>
           ))}
         </div>

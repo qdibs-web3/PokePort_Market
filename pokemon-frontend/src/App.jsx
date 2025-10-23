@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { Wallet, Search, ShoppingCart, User, Settings } from 'lucide-react'
-import plogo from '/src/assets/plogo.png';
+import plogo from '/src/assets/pmarket.png';
 import './App.css'
 
 // Components
@@ -113,7 +113,7 @@ function App() {
                       <img
                         src={plogo}
                         alt="Pokemon Market Logo"
-                        className="h-16 w-auto object-contain"
+                        className="h-35 w-auto object-contain"
                       />
                     </h1>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
