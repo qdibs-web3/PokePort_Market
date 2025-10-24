@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Compass, ShoppingBag, User, Shield, ChevronLeft, ChevronRight, Sun, Moon } from 'lucide-react'
+import { Home, Compass, ShoppingBag, User, Shield, ChevronLeft, ChevronRight, Sun, Moon } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import plogo from '/src/assets/plogo.png'
 import { useTheme } from '../contexts/ThemeContext'
@@ -15,6 +15,13 @@ const Sidebar = ({ user, isCollapsed, onToggleCollapse }) => {
   const navItems = [
     {
       path: '/',
+      label: 'Dashboard',
+      icon: Home,
+      requiresAuth: false,
+      adminOnly: false
+    },
+    {
+      path: '/explore',
       label: 'Explore',
       icon: Compass,
       requiresAuth: false,

@@ -28,7 +28,7 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
 
           {/* Desktop: Only show a spacer or app title */}
           <div className="hidden md:block">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">PokéPort Market</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">PokéPort</h1>
           </div>
 
           {/* Wallet / Cart Section - Visible on all screen sizes */}
@@ -85,6 +85,15 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
             to="/" 
             className={`text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors ${
               isActive('/') ? 'text-blue-600 dark:text-blue-400 font-semibold' : ''
+            }`}
+          >
+            Dashboard
+          </Link>
+
+          <Link 
+            to="/explore" 
+            className={`text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors ${
+              isActive('/explore') ? 'text-blue-600 dark:text-blue-400 font-semibold' : ''
             }`}
           >
             Explore

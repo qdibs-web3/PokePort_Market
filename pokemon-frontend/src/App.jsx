@@ -15,6 +15,7 @@ import Footer from './components/Footer'
 import CardGrid from './components/CardGrid'
 import UserAccount from './components/UserAccount'
 import AdminPanel from './components/AdminPanel'
+import Dashboard from './components/pages/Dashboard'
 import Explore from './components/pages/Explore'
 import { CartProvider } from './contexts/CartContext'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -125,7 +126,9 @@ function App() {
               
               <main className="flex-1 container mx-auto px-4 py-8">
                 <Routes>
-                  <Route path="/" element={<Explore />} />
+                  <Route path="/" element={<Dashboard />} />
+                  
+                  <Route path="/explore" element={<Explore />} />
 
                   <Route path="/market" element={
                     <div>
