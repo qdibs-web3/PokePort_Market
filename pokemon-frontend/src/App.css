@@ -167,3 +167,97 @@
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
+/* ========================================
+   NEW LAYOUT STYLES FOR SIDEBAR & FOOTER
+   ======================================== */
+
+/* Sidebar transition styles */
+aside {
+  transition: width 0.3s ease-in-out;
+}
+
+/* Ensure sidebar is fixed height and scrollable if needed */
+aside {
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+}
+
+/* Hide scrollbar for sidebar but keep functionality */
+aside::-webkit-scrollbar {
+  width: 4px;
+}
+
+aside::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+aside::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+aside::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Footer styles */
+footer {
+  flex-shrink: 0;
+}
+
+/* Main content area adjustments */
+main {
+  min-height: calc(100vh - 200px); /* Account for header and footer */
+}
+
+/* Responsive adjustments for main content with sidebar */
+@media (min-width: 768px) {
+  main {
+    /* Add subtle padding to prevent content from touching sidebar edge */
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Smooth transitions for layout changes */
+.flex-1 {
+  transition: margin-left 0.3s ease-in-out;
+}
+
+/* Ensure proper spacing for page content */
+.container {
+  width: 100%;
+  max-width: 100%;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1536px;
+  }
+}
