@@ -48,6 +48,7 @@ module.exports = async (req, res) => {
       id: user._id,
       wallet_address: user.walletAddress,
       username: user.username,
+      display_name: user.displayName,
       email: user.email,
       is_admin: user.isAdmin,
       created_at: user.createdAt,
@@ -60,4 +61,3 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Authentication failed' });
   }
 };
-

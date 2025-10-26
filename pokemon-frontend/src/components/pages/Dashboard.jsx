@@ -19,7 +19,7 @@ export default function Dashboard() {
             className="w-32 h-32 object-contain mb-4"
           />
           <div className="flex items-center gap-2 mb-2">
-            <h2 className="text-2xl font-bold text-gray-900">Card Explorer</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Card Explorer</h2>
             <Link
               to="/explore"
               className="text-white bg-indigo-500 hover:bg-indigo-600 text-xs px-3 py-1 rounded-full transition-colors"
@@ -55,7 +55,7 @@ export default function Dashboard() {
             className="w-32 h-32 object-contain mb-4"
           />
           <div className="flex items-center gap-2 mb-2">
-            <h2 className="text-2xl font-bold text-gray-900">Shop Pokémon</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Shop Pokémon</h2>
             <Link
               to="/market"
               className="text-white bg-indigo-500 hover:bg-indigo-600 text-xs px-3 py-1 rounded-full transition-colors"
@@ -91,7 +91,7 @@ export default function Dashboard() {
             className="w-32 h-32 object-contain mb-4"
           />
           <div className="flex items-center gap-2 mb-2">
-            <h2 className="text-2xl font-bold text-gray-900">Custom 3D Prints</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Custom 3D Prints</h2>
             <Link
               to="/market"
               className="text-white bg-indigo-500 hover:bg-indigo-600 text-xs px-3 py-1 rounded-full transition-colors"

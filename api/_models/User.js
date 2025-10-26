@@ -12,6 +12,11 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  displayName: {
+    type: String,
+    maxlength: 16,
+    default: null
+  },
   email: {
     type: String,
     unique: true,
@@ -38,4 +43,3 @@ userSchema.pre('save', function(next) {
 });
 
 module.exports = mongoose.models.User || mongoose.model('User', userSchema);
-

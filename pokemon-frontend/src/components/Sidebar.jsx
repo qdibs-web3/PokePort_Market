@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Home, Compass, ShoppingBag, User, Shield, ChevronLeft, ChevronRight, Sun, Moon } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import plogo from '/src/assets/plogo.png'
+import pblogo from '/src/assets/pb.png'
 import { useTheme } from '../contexts/ThemeContext'
 
 const Sidebar = ({ user, isCollapsed, onToggleCollapse }) => {
@@ -69,7 +70,7 @@ const Sidebar = ({ user, isCollapsed, onToggleCollapse }) => {
       <div className="p-4 border-gray-200 dark:border-gray-700 flex items-center justify-center">
         <Link to="/" className="flex items-center justify-center">
           <img
-            src={plogo}
+            src={isCollapsed ? pblogo : plogo}
             alt="PokéPort Logo"
             className={`object-contain cursor-pointer hover:opacity-90 transition-opacity duration-200 ${
               isCollapsed ? 'w-8 h-8' : 'w-60 h-14'

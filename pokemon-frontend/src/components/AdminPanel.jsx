@@ -17,7 +17,9 @@ import {
   Users, 
   TrendingUp,
   Eye,
-  EyeOff
+  EyeOff,
+  CheckCircle,
+  XCircle
 } from 'lucide-react'
 
 const AdminPanel = ({ user, onCardUpdate }) => {
@@ -83,6 +85,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
   const calculateAnalytics = (cardsData, ordersData) => {
     const totalCards = cardsData.length
     const activeCards = cardsData.filter(card => card.is_active === true).length
+    const inactiveCards = cardsData.filter(card => card.is_active === false).length
     const totalOrders = ordersData.length
     const confirmedOrders = ordersData.filter(order => 
       order.status === 'confirmed' || 
@@ -93,14 +96,63 @@ const AdminPanel = ({ user, onCardUpdate }) => {
       return sum + (parseFloat(order.total_price_eth) || 0)
     }, 0)
     const pendingOrders = ordersData.filter(order => order.status === 'pending').length
+    const shippedOrders = ordersData.filter(order => order.status === 'shipped').length
+    const deliveredOrders = ordersData.filter(order => order.status === 'delivered').length
+    const cancelledOrders = ordersData.filter(order => order.status === 'cancelled').length
+    
+    // Calculate total stock quantity
+    const totalStockQuantity = cardsData.reduce((sum, card) => {
+      return sum + (parseInt(card.stock_quantity) || 0)
+    }, 0)
+    
+    // Calculate average order value
+    const avgOrderValue = confirmedOrders.length > 0 
+      ? (totalRevenue / confirmedOrders.length).toFixed(4)
+      : '0.0000'
+    
+    // Calculate total items sold
+    const totalItemsSold = confirmedOrders.reduce((sum, order) => {
+      return sum + (parseInt(order.quantity) || 0)
+    }, 0)
+    
+    // Find best selling card (most ordered)
+    const cardOrderCount = {}
+    ordersData.forEach(order => {
+      if (order.status === 'confirmed' || order.status === 'shipped' || order.status === 'delivered') {
+        const cardId = order.card_id
+        cardOrderCount[cardId] = (cardOrderCount[cardId] || 0) + (parseInt(order.quantity) || 0)
+      }
+    })
+    
+    let bestSellingCardId = null
+    let maxSales = 0
+    Object.entries(cardOrderCount).forEach(([cardId, count]) => {
+      if (count > maxSales) {
+        maxSales = count
+        bestSellingCardId = cardId
+      }
+    })
+    
+    const bestSellingCard = bestSellingCardId 
+      ? cardsData.find(card => card.id === bestSellingCardId)
+      : null
 
     setAnalytics({
       totalCards,
       activeCards,
+      inactiveCards,
       totalOrders,
       confirmedOrders: confirmedOrders.length,
       totalRevenue: totalRevenue.toFixed(4),
-      pendingOrders
+      pendingOrders,
+      shippedOrders,
+      deliveredOrders,
+      cancelledOrders,
+      totalStockQuantity,
+      avgOrderValue,
+      totalItemsSold,
+      bestSellingCard,
+      bestSellingCardSales: maxSales
     })
   }
 
@@ -265,7 +317,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
     return (
       <div className="text-center py-12">
         <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Access Denied</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Access Denied</h3>
         <p className="text-gray-600">You need admin privileges to access this panel</p>
       </div>
     )
@@ -280,9 +332,9 @@ const AdminPanel = ({ user, onCardUpdate }) => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-8xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Panel</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Admin Panel</h1>
         <p className="text-gray-600">Manage your Pokemon card marketplace</p>
       </div>
 
@@ -334,7 +386,143 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                 </p>
               </CardContent>
             </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{analytics.totalOrders}</div>
+                <p className="text-xs text-muted-foreground">
+                  All time orders
+                </p>
+              </CardContent>
+            </Card>
           </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Avg Order Value</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{analytics.avgOrderValue} ETH</div>
+                <p className="text-xs text-muted-foreground">
+                  Per confirmed order
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Stock</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{analytics.totalStockQuantity}</div>
+                <p className="text-xs text-muted-foreground">
+                  Items in inventory
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Items Sold</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{analytics.totalItemsSold}</div>
+                <p className="text-xs text-muted-foreground">
+                  Total units sold
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Inactive Cards</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{analytics.inactiveCards}</div>
+                <p className="text-xs text-muted-foreground">
+                  Not listed on market
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Shipped Orders</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{analytics.shippedOrders}</div>
+                <p className="text-xs text-muted-foreground">
+                  In transit
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Delivered Orders</CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{analytics.deliveredOrders}</div>
+                <p className="text-xs text-muted-foreground">
+                  Successfully delivered
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Cancelled Orders</CardTitle>
+                <XCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{analytics.cancelledOrders}</div>
+                <p className="text-xs text-muted-foreground">
+                  Cancelled by admin
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {analytics.bestSellingCard && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium">Best Selling Product</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-4">
+                  {analytics.bestSellingCard.image_url && (
+                    <img 
+                      src={analytics.bestSellingCard.image_url} 
+                      alt={analytics.bestSellingCard.name}
+                      className="w-20 h-20 object-cover rounded-lg"
+                    />
+                  )}
+                  <div>
+                    <p className="text-lg font-bold">{analytics.bestSellingCard.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {analytics.bestSellingCardSales} units sold
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {analytics.bestSellingCard.price_eth} ETH each
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="cards">
@@ -767,7 +955,7 @@ const AdminPanel = ({ user, onCardUpdate }) => {
               </DialogContent>
             </Dialog>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
               {cards.map((card) => (
                 <Card key={card.id} className={`${!card.is_active ? 'opacity-60' : ''}`}>
                   <CardHeader>

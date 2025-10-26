@@ -105,10 +105,6 @@ export default function Explore() {
       // Normalize response
       const arr = Array.isArray(cardsRes) ? cardsRes : cardsRes.data ? cardsRes.data : cardsRes.cards || [];
       setCards(arr);
-      // scroll to cards
-      setTimeout(() => {
-        document.getElementById('cards-section')?.scrollIntoView({ behavior: 'smooth' });
-      }, 150);
     } catch (err) {
       console.error('Error loading cards for set', err);
       setCards([]);
@@ -126,7 +122,7 @@ export default function Explore() {
           onClick={() => setSeriesExpanded(!seriesExpanded)}
         >
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {selectedSerie ? selectedSerie.name : 'Explore Series'}
             </h1>
             <p className="text-sm text-gray-500 mt-1">
@@ -164,7 +160,7 @@ export default function Explore() {
             onClick={() => setSetsExpanded(!setsExpanded)}
           >
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 {selectedSet ? selectedSet.name : `Sets in ${selectedSerie.name}`}
               </h2>
               <p className="text-sm text-gray-500 mt-1">
@@ -199,7 +195,7 @@ export default function Explore() {
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   Cards in {selectedSet.name}
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
@@ -210,14 +206,14 @@ export default function Explore() {
               {/* Filter Buttons */}
               {!loadingCards && filteredCards.length > 0 && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700">Sort by:</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</span>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setSortBy('alphabetical')}
                       className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
                         sortBy === 'alphabetical'
                           ? 'bg-indigo-600 text-white shadow-md'
-                          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                     >
                       A-Z
@@ -227,7 +223,7 @@ export default function Explore() {
                       className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
                         sortBy === 'price'
                           ? 'bg-indigo-600 text-white shadow-md'
-                          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                     >
                       Price
@@ -237,7 +233,7 @@ export default function Explore() {
                       className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
                         sortBy === 'number'
                           ? 'bg-indigo-600 text-white shadow-md'
-                          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                     >
                       Set #

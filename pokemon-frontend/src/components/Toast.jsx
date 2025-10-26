@@ -35,7 +35,7 @@ const Toast = ({ show, onClose, card }) => {
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between mb-2">
-              <h3 className="text-sm font-semibold text-gray-900">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 Added to cart!
               </h3>
               <button
@@ -59,7 +59,7 @@ const Toast = ({ show, onClose, card }) => {
 
               {/* Product Details */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                   {card.name}
                 </p>
                 {card.product_type && (

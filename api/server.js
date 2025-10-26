@@ -77,6 +77,7 @@ app.post('/api/orders/notify-admin', (req, res) => {
 // General API Routes (MUST come AFTER specific routes)
 app.use('/api/cards', require('./cards'));
 app.use('/api/users/auth', require('./users/auth'));
+app.post('/api/users/update-display-name', require('./users/update-display-name'));
 app.use('/api/orders', require('./orders'));
 
 // Health check
@@ -93,6 +94,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('  PUT  /api/cards/:id');
   console.log('  DELETE /api/cards/:id');
   console.log('  POST /api/users/auth');
+  console.log('  POST /api/users/update-display-name');
   console.log('  GET  /api/orders');
   console.log('  POST /api/orders');
   console.log('  POST /api/orders/:id/confirm');

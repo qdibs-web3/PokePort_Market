@@ -178,7 +178,7 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
           >
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-600" />
-              <h3 className="text-sm font-semibold text-gray-700">Filters</h3>
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Filters</h3>
             </div>
             <div className="flex items-center gap-2">
               {(selectedProductType || selectedRarity || priceRange.min || priceRange.max || searchTerm) && (
@@ -214,7 +214,6 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                         placeholder="Search Product..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && setIsFiltersOpen(false)}
                         className="pl-9 h-9 text-sm"
                       />
                     </div>
@@ -227,7 +226,6 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                       value={selectedProductType}
                       onChange={(e) => {
                         setSelectedProductType(e.target.value)
-                        setIsFiltersOpen(false)
                       }}
                       className="w-full h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
@@ -321,7 +319,7 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
       {filteredCards.length === 0 ? (
         <div className="text-center py-12">
           <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No cards found</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No cards found</h3>
           <p className="text-gray-600">Try adjusting your search or filters</p>
         </div>
       ) : (
@@ -372,7 +370,7 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
               </CardHeader>
 
               <CardContent className="-mt-6 pb-0 px-2 sm:px-3 space-y-1">
-                <CardTitle className="text-sm sm:text-m font-bold text-gray-900 line-clamp-1 mt-1">
+                <CardTitle className="text-sm sm:text-m font-bold text-gray-900 dark:text-gray-100 line-clamp-1 mt-1">
                   {card.name}
                 </CardTitle>
 

@@ -20,6 +20,9 @@ const UserAccount = ({ user, onCardPurchase }) => {
   const [showCelebration, setShowCelebration] = useState(false)
   const [purchasedItems, setPurchasedItems] = useState([])
   const [transactionHash, setTransactionHash] = useState('')
+  const [showDisplayNameForm, setShowDisplayNameForm] = useState(false)
+  const [newDisplayName, setNewDisplayName] = useState('')
+  const [displayNameLoading, setDisplayNameLoading] = useState(false)
   const { items, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart()
   
   // Update active tab when location state changes
@@ -200,6 +203,52 @@ const UserAccount = ({ user, onCardPurchase }) => {
     }
   }
 
+  const handleUpdateDisplayName = async (e) => {
+    e.preventDefault()
+    
+    if (!newDisplayName.trim()) {
+      alert('Please enter a display name')
+      return
+    }
+    
+    if (newDisplayName.length > 16) {
+      alert('Display name must be 16 characters or less')
+      return
+    }
+    
+    setDisplayNameLoading(true)
+    
+    try {
+      const response = await fetch('/api/users/update-display-name', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          wallet_address: user.wallet_address,
+          display_name: newDisplayName
+        }),
+      })
+      
+      if (response.ok) {
+        const updatedUser = await response.json()
+        // Update user in parent component (App.jsx)
+        window.location.reload() // Simple reload to refresh user data
+        alert('Display name updated successfully!')
+        setShowDisplayNameForm(false)
+        setNewDisplayName('')
+      } else {
+        const errorData = await response.json()
+        alert('Failed to update display name: ' + (errorData.error || 'Unknown error'))
+      }
+    } catch (error) {
+      console.error('Error updating display name:', error)
+      alert('Error updating display name: ' + error.message)
+    } finally {
+      setDisplayNameLoading(false)
+    }
+  }
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -214,7 +263,7 @@ const UserAccount = ({ user, onCardPurchase }) => {
     return (
       <div className="text-center py-12">
         <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Please connect your wallet</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Please connect your wallet</h3>
         <p className="text-gray-600">You need to connect your wallet to view your account</p>
       </div>
     )
@@ -320,9 +369,9 @@ const UserAccount = ({ user, onCardPurchase }) => {
         </div>
       )}
       
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Account</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">My Account</h1>
           <p className="text-gray-600">Manage your profile and view your order history</p>
         </div>
 
@@ -347,19 +396,71 @@ const UserAccount = ({ user, onCardPurchase }) => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">Username</label>
-                <p className="text-lg text-gray-900">{user.username}</p>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+                <p className="text-lg text-gray-900 dark:text-gray-100">{user.username}</p>
               </div>
               
               <div>
-                <label className="text-sm font-medium text-gray-700">Wallet Address</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Display Name</label>
+                <p className="text-lg text-gray-900 dark:text-gray-100 mb-2">{user.display_name || 'Not set'}</p>
+                {!showDisplayNameForm ? (
+                  <Button 
+                    onClick={() => setShowDisplayNameForm(true)}
+                    variant="outline"
+                    size="sm"
+                    className="mt-1"
+                  >
+                    Update Display Name
+                  </Button>
+                ) : (
+                  <form onSubmit={handleUpdateDisplayName} className="space-y-3 mt-2">
+                    <div>
+                      <Input
+                        type="text"
+                        placeholder="Enter display name (max 16 characters)"
+                        value={newDisplayName}
+                        onChange={(e) => setNewDisplayName(e.target.value)}
+                        maxLength={16}
+                        className="w-full"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {newDisplayName.length}/16 characters
+                      </p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button 
+                        type="submit" 
+                        size="sm"
+                        disabled={displayNameLoading}
+                      >
+                        {displayNameLoading ? 'Saving...' : 'Save'}
+                      </Button>
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setShowDisplayNameForm(false)
+                          setNewDisplayName('')
+                        }}
+                        disabled={displayNameLoading}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Wallet Address</label>
                 <p className="text-sm text-gray-600 font-mono bg-gray-50 p-2 rounded">
                   {user.wallet_address}
                 </p>
               </div>
               
               <div>
-                <label className="text-sm font-medium text-gray-700">Account Type</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Account Type</label>
                 <div className="flex items-center space-x-2">
                   <Badge className={user.is_admin ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}>
                     {user.is_admin ? 'Admin' : 'Fren'}
@@ -368,14 +469,14 @@ const UserAccount = ({ user, onCardPurchase }) => {
               </div>
               
               <div>
-                <label className="text-sm font-medium text-gray-700">Member Since</label>
-                <p className="text-gray-900">{formatDate(user.created_at)}</p>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Member Since</label>
+                <p className="text-gray-900 dark:text-gray-100">{formatDate(user.created_at)}</p>
               </div>
               
               {user.last_login && (
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Last Login</label>
-                  <p className="text-gray-900">{formatDate(user.last_login)}</p>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Last Login</label>
+                  <p className="text-gray-900 dark:text-gray-100">{formatDate(user.last_login)}</p>
                 </div>
               )}
             </CardContent>

@@ -26,9 +26,11 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
             />
           </Link>
 
-          {/* Desktop: Only show a spacer or app title */}
+          {/* Desktop: Show welcome message with display name or default */}
           <div className="hidden md:block">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">PokéPort</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              {user ? `Welcome, ${user.display_name || user.username}` : 'Welcome to PokéPort'}
+            </h1>
           </div>
 
           {/* Wallet / Cart Section - Visible on all screen sizes */}
