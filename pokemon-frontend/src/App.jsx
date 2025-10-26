@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { Wallet, Search, ShoppingCart, User, Settings } from 'lucide-react'
 import plogo from '/src/assets/pmarket.png'
+import expika from '/src/assets/expika.png'
 import './App.css'
 
 // Components
@@ -128,7 +129,26 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   
-                  <Route path="/explore" element={<Explore />} />
+                  <Route
+                    path="/explore"
+                    element={
+                      <div>
+                        <div className="text-center mb-8">
+                          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex justify-center">
+                            <img
+                              src={expika}
+                              alt="Pokemon Market Logo"
+                              className="h-35 w-auto object-contain"
+                            />
+                          </h1>
+                          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                            Select an english pokemon series, a set, and enjoy viewing and learning the cards!
+                          </p>
+                        </div>
+                        <Explore />
+                      </div>
+                    }
+                  />
 
                   <Route path="/market" element={
                     <div>
