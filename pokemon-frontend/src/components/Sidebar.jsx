@@ -63,7 +63,7 @@ const Sidebar = ({ user, isCollapsed, onToggleCollapse }) => {
             >
               <Icon className={`${isCollapsed ? 'w-6 h-6' : 'w-5 h-5'} flex-shrink-0`} />
               {!isCollapsed && (
-                <span className="text-sm whitespace-nowrap">{item.label}</span>
+                  <span className="text-sm whitespace-nowrap pokemon-font">{item.label}</span>
               )}
             </Link>
           )

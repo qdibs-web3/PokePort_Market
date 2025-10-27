@@ -165,6 +165,45 @@
 }
 
 
+.pokemon-font {
+  font-family: 'Pokemon Hollow', sans-serif;
+  letter-spacing: 0.12em;
+  font-size: 1.2rem; /* optional tweak */
+  font-weight: 900;
+}
+
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 12s ease infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.8s ease forwards;
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s infinite;
+}
+
+
+
 /* Add to your CSS file for even better responsive behavior */
 @media (min-width: 1536px) {
   .grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-3.xl\\:grid-cols-4.\\32xl\\:grid-cols-5 {
