@@ -1,5 +1,6 @@
+// src/components/Sidebar.jsx
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Compass, ShoppingBag, User, Shield, ChevronLeft, ChevronRight, Sun, Moon } from 'lucide-react'
+import { Home, Compass, ShoppingBag, User, Shield, ChevronLeft, ChevronRight, Sun, Moon, Slack } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import plogo from '/src/assets/plogo.png'
 import pblogo from '/src/assets/pb.png'
@@ -9,53 +10,19 @@ const Sidebar = ({ user, isCollapsed, onToggleCollapse }) => {
   const location = useLocation()
   const { isDarkMode, toggleTheme } = useTheme()
 
-  // Helper function to check if a route is active
   const isActive = (path) => location.pathname === path
 
-  // Navigation items configuration
   const navItems = [
-    {
-      path: '/',
-      label: 'Dashboard',
-      icon: Home,
-      requiresAuth: false,
-      adminOnly: false
-    },
-    {
-      path: '/explore',
-      label: 'Explore',
-      icon: Compass,
-      requiresAuth: false,
-      adminOnly: false
-    },
-    {
-      path: '/market',
-      label: 'Market',
-      icon: ShoppingBag,
-      requiresAuth: false,
-      adminOnly: false
-    },
-    {
-      path: '/account',
-      label: 'My Account',
-      icon: User,
-      requiresAuth: true,
-      adminOnly: false
-    },
-    {
-      path: '/admin',
-      label: 'Admin Panel',
-      icon: Shield,
-      requiresAuth: true,
-      adminOnly: true
-    }
+    { path: '/', label: 'Dashboard', icon: Home, requiresAuth: false, adminOnly: false },
+    { path: '/explore', label: 'Explore', icon: Compass, requiresAuth: false, adminOnly: false },
+    { path: '/market', label: 'Market', icon: ShoppingBag, requiresAuth: false, adminOnly: false },
+    { path: '/battle-arena', label: 'Battle Arena', icon: Slack, requiresAuth: false, adminOnly: false }, // new
+    { path: '/account', label: 'My Account', icon: User, requiresAuth: true, adminOnly: false },
+    { path: '/admin', label: 'Admin Panel', icon: Shield, requiresAuth: true, adminOnly: true }
   ]
 
-  // Filter navigation items based on user state
   const visibleNavItems = navItems.filter(item => {
-    // If item requires auth and user is not logged in, hide it
     if (item.requiresAuth && !user) return false
-    // If item is admin-only and user is not admin, hide it
     if (item.adminOnly && (!user || !user.is_admin)) return false
     return true
   })
@@ -66,7 +33,6 @@ const Sidebar = ({ user, isCollapsed, onToggleCollapse }) => {
         isCollapsed ? 'w-[60px]' : 'w-[20%] min-w-[240px] max-w-[280px]'
       }`}
     >
-      {/* Logo Section */}
       <div className="p-4 border-gray-200 dark:border-gray-700 flex items-center justify-center">
         <Link to="/" className="flex items-center justify-center">
           <img
@@ -79,7 +45,6 @@ const Sidebar = ({ user, isCollapsed, onToggleCollapse }) => {
         </Link>
       </div>
 
-      {/* Navigation Items */}
       <nav className="flex-1 py-6 px-2 space-y-2">
         {visibleNavItems.map((item) => {
           const Icon = item.icon
@@ -105,16 +70,12 @@ const Sidebar = ({ user, isCollapsed, onToggleCollapse }) => {
         })}
       </nav>
 
-      {/* Bottom Controls: Dark Mode Toggle + Collapse Button */}
       <div className="p-4 border-gray-200 dark:border-gray-700 space-y-2">
-        {/* Dark Mode Toggle */}
         <Button
           variant="ghost"
           size="sm"
           onClick={toggleTheme}
-          className={`w-full flex items-center gap-2 ${
-            isCollapsed ? 'justify-center' : 'justify-start'
-          } hover:bg-gray-100 dark:hover:bg-gray-800`}
+          className={`w-full flex items-center gap-2 ${isCollapsed ? 'justify-center' : 'justify-start'} hover:bg-gray-100 dark:hover:bg-gray-800`}
           title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
           {isDarkMode ? (
@@ -130,14 +91,11 @@ const Sidebar = ({ user, isCollapsed, onToggleCollapse }) => {
           )}
         </Button>
 
-        {/* Collapse Toggle Button */}
         <Button
           variant="ghost"
           size="sm"
           onClick={onToggleCollapse}
-          className={`w-full flex items-center gap-2 ${
-            isCollapsed ? 'justify-center' : 'justify-start'
-          } hover:bg-gray-100 dark:hover:bg-gray-800`}
+          className={`w-full flex items-center gap-2 ${isCollapsed ? 'justify-center' : 'justify-start'} hover:bg-gray-100 dark:hover:bg-gray-800`}
           title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {isCollapsed ? (

@@ -18,6 +18,7 @@ import UserAccount from './components/UserAccount'
 import AdminPanel from './components/AdminPanel'
 import Dashboard from './components/pages/Dashboard'
 import Explore from './components/pages/Explore'
+import BattleArena from './components/pages/BattleArena' 
 import { CartProvider } from './contexts/CartContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 
@@ -27,12 +28,11 @@ function App() {
   const [cards, setCards] = useState([])
   const [loading, setLoading] = useState(true)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    // Load sidebar state from localStorage, default to false (expanded)
     const saved = localStorage.getItem('sidebarCollapsed')
     return saved ? JSON.parse(saved) : false
   })
 
-  // Save sidebar state to localStorage whenever it changes
+  // Persist sidebar state
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed))
   }, [sidebarCollapsed])
@@ -48,9 +48,7 @@ function App() {
         // Authenticate with backend
         const response = await fetch('/api/users/auth', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ wallet_address: walletAddress }),
         })
         
@@ -69,13 +67,12 @@ function App() {
     }
   }
 
-  // Disconnect wallet
   const disconnectWallet = () => {
     setUser(null)
     localStorage.removeItem('walletAddress')
   }
 
-  // Load cards from API
+  // Load cards
   const loadCards = async () => {
     try {
       const response = await fetch('/api/cards')
@@ -90,11 +87,10 @@ function App() {
     }
   }
 
-  // Check for existing wallet connection on load
+  // Auto-connect wallet and load cards
   useEffect(() => {
     const savedWallet = localStorage.getItem('walletAddress')
     if (savedWallet && typeof window.ethereum !== 'undefined') {
-      // Auto-connect if wallet was previously connected
       window.ethereum.request({ method: 'eth_accounts' }).then(accounts => {
         if (accounts.length > 0 && accounts[0] === savedWallet) {
           connectWallet()
@@ -109,7 +105,8 @@ function App() {
       <CartProvider>
         <Router>
           <div className="min-h-screen flex bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
-            {/* Sidebar - Desktop only */}
+            
+            {/* Sidebar */}
             <Sidebar 
               user={user} 
               isCollapsed={sidebarCollapsed}
@@ -142,7 +139,7 @@ function App() {
                             />
                           </h1>
                           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                            Select an english pokemon series, a set, and enjoy viewing and learning the cards!
+                            Select an English Pokémon series, a set, and enjoy viewing and learning the cards!
                           </p>
                         </div>
                         <Explore />
@@ -150,37 +147,38 @@ function App() {
                     }
                   />
 
-                  <Route path="/market" element={
-                    <div>
-                      <div className="text-center mb-8">
-                        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex justify-center">
-                          <img
-                            src={plogo}
-                            alt="Pokemon Market Logo"
-                            className="h-35 w-auto object-contain"
-                          />
-                        </h1>
-                        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                          Discover and collect authentic Pokemon cards and unique pieces via crypto.
-                        </p>
+                  <Route 
+                    path="/market" 
+                    element={
+                      <div>
+                        <div className="text-center mb-8">
+                          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex justify-center">
+                            <img
+                              src={plogo}
+                              alt="Pokemon Market Logo"
+                              className="h-35 w-auto object-contain"
+                            />
+                          </h1>
+                          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                            Discover and collect authentic Pokémon cards and unique pieces via crypto.
+                          </p>
+                        </div>
+                        <CardGrid 
+                          cards={cards} 
+                          loading={loading} 
+                          user={user}
+                          onCardPurchase={loadCards}
+                        />
                       </div>
-                      
-                      <CardGrid 
-                        cards={cards} 
-                        loading={loading} 
-                        user={user}
-                        onCardPurchase={loadCards}
-                      />
-                    </div>
-                  } />
-                  
-                  <Route path="/account" element={
-                    <UserAccount user={user} onCardPurchase={loadCards} />
-                  } />
-                  
-                  <Route path="/admin" element={
-                    <AdminPanel user={user} onCardUpdate={loadCards} />
-                  } />
+                    } 
+                  />
+
+                  <Route path="/account" element={<UserAccount user={user} onCardPurchase={loadCards} />} />
+                  <Route path="/admin" element={<AdminPanel user={user} onCardUpdate={loadCards} />} />
+
+                  {/* ✅ NEW BATTLE ARENA ROUTE */}
+                  <Route path="/battle-arena" element={<BattleArena />} />
+
                 </Routes>
               </main>
 
