@@ -1,31 +1,11 @@
 // src/pages/BattleArena.jsx
-import React, { useEffect, useState, useRef, useMemo } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 
-/**
- * BattleArena.jsx — upgraded
- *
- * Features added:
- * - sessionStorage caching of fetched Pokémon / moves / types (reduces PokeAPI requests)
- * - Type effectiveness multipliers using PokeAPI type damage relations
- * - Multiple Pokémon per side (team of up to TEAM_SIZE)
- * - Fetch real move names / types / power from PokeAPI (cached)
- * - Simple autocomplete for choosing Pokémon (debounced)
- * - Critical hit mechanic
- * - Small CSS animations for hit / faint effects
- * - Logs newest-first (we prepend log entries)
- *
- * Limitations / notes:
- * - All networking is client-side; for large scale use implement server-side caching.
- * - PokeAPI rate limits still apply; caching helps a lot within a session.
- */
-
-const TEAM_SIZE = 3
 const clamp = (v, a = 0, b = 100) => Math.max(a, Math.min(b, v))
-const DEFAULT_HP_SCALE = 1.0
+const DEFAULT_HP_SCALE = 2.0 // Same for both player and AI for fair battles
 const CRIT_CHANCE = 0.0625 // 6.25%
 const CRIT_MULT = 1.5
 
-// --- Simple CSS for animations (in-component) ---
 const styles = `
 .battle-shake { transform: translateX(0); transition: transform 120ms ease; }
 .battle-hit { animation: hitFlash 260ms ease; }
@@ -36,6 +16,8 @@ const styles = `
   100% { filter: brightness(1); transform: translateX(0); }
 }
 .battle-faint { opacity: 0.25; transform: scale(0.98); transition: opacity 300ms, transform 300ms; }
+.battle-card { transition: all 0.3s ease; }
+.battle-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 `
 
 // --- Helpers: caching fetch wrappers ---
@@ -105,7 +87,6 @@ async function fetchTypeRelations(typeName) {
   const json = await safeFetchJson(`https://pokeapi.co/api/v2/type/${typeName}`)
   // build a map of targetType -> multiplier
   const map = {}
-  // default multiplier 1 for unknowns; we override for relations
   ;(json.damage_relations?.double_damage_to || []).forEach(t => (map[t.name] = 2))
   ;(json.damage_relations?.half_damage_to || []).forEach(t => (map[t.name] = 0.5))
   ;(json.damage_relations?.no_damage_to || []).forEach(t => (map[t.name] = 0))
@@ -115,18 +96,15 @@ async function fetchTypeRelations(typeName) {
 
 // choose up to 4 real moves for a Pokémon (prefers moves with power)
 async function selectMovesForPokemon(pokemon, limit = 4) {
-  // cached per pokemon
   const key = `poke:selectedMoves:${pokemon.name}`
   const cached = getSessionCache(key)
   if (cached) return cached
-  const candidates = pokemon.movesList.slice().map(m => m) // use provided moves list
-  // try sequentially until we have moves with power; limit calls
+  const candidates = pokemon.movesList.slice()
   const moves = []
   for (let i = 0; i < candidates.length && moves.length < limit; i++) {
     const entry = candidates[i]
     try {
       const mv = await fetchMove(entry.url || entry.name)
-      // only accept moves with power or a few moves without power as fallback
       if (mv.power || Math.random() < 0.05) {
         moves.push(mv)
       }
@@ -136,27 +114,34 @@ async function selectMovesForPokemon(pokemon, limit = 4) {
   }
   // If none found, synthesize basic moves
   while (moves.length < limit) {
-    moves.push({ name: 'Tackle', power: 12, type: pokemon.types[0] || 'normal' })
+    moves.push({ name: 'Tackle', power: 40, type: pokemon.types[0] || 'normal', accuracy: 100 })
   }
   setSessionCache(key, moves)
   return moves
 }
 
-// --- Damage formula including type multiplier & crits ---
+// --- Enhanced damage formula with accuracy check ---
 async function computeDamageDetailed(attacker, defender, move) {
-  // attacker/defender have stats: stats.attack, stats.defense, stats.hp; types array
-  // move: { power, type, name }
   const atk = Math.max(1, attacker.stats.attack || attacker.stats['special-attack'] || 50)
   const def = Math.max(1, defender.stats.defense || defender.stats['special-defense'] || 50)
-  const movePower = Math.max(1, move.power || 10)
+  const movePower = Math.max(1, move.power || 40)
+
+  // Accuracy check
+  const accuracy = move.accuracy || 100
+  const hitRoll = Math.random() * 100
+  const missed = hitRoll > accuracy
+
+  if (missed) {
+    return { damage: 0, typeMult: 1, isCrit: false, missed: true }
+  }
 
   // base damage
-  const base = (atk / def) * movePower
+  const base = (atk / def) * movePower * 0.5 // Balanced multiplier
 
   // random factor
   const randomFactor = 0.85 + Math.random() * 0.3 // 0.85 - 1.15
 
-  // type multiplier: for each defender type, multiply
+  // type multiplier
   let typeMult = 1
   try {
     const relations = await fetchTypeRelations(move.type)
@@ -173,7 +158,7 @@ async function computeDamageDetailed(attacker, defender, move) {
   const critMult = isCrit ? CRIT_MULT : 1
 
   const damage = Math.max(1, Math.round(base * randomFactor * typeMult * critMult))
-  return { damage, typeMult, isCrit }
+  return { damage, typeMult, isCrit, missed: false }
 }
 
 // --- Utility: fetch list of pokemon names for autocomplete (cached) ---
@@ -181,30 +166,47 @@ async function fetchPokemonNameList() {
   const key = 'poke:nameList:v1'
   const cached = getSessionCache(key)
   if (cached) return cached
-  // fetch a large limit to include many species
   const json = await safeFetchJson('https://pokeapi.co/api/v2/pokemon?limit=2000')
   const names = json.results.map(r => r.name)
   setSessionCache(key, names)
   return names
 }
 
+// Get effectiveness message
+function getEffectivenessMessage(mult) {
+  if (mult === 0) return "no effect"
+  if (mult >= 4) return "devastatingly effective"
+  if (mult >= 2) return "super effective"
+  if (mult <= 0.25) return "barely effective"
+  if (mult <= 0.5) return "not very effective"
+  return "normal"
+}
+
+// Format move name for display
+function formatMoveName(name) {
+  return name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+}
+
 // --- Component ---
 const BattleArena = () => {
   // basic state
-  const [pokemonList, setPokemonList] = useState([]) // for autocomplete
-  const [query, setQuery] = useState('')
+  const [pokemonList, setPokemonList] = useState([])
+  const [query, setQuery] = useState("")
   const [suggestions, setSuggestions] = useState([])
-  const [playerTeams, setPlayerTeams] = useState([]) // array of pokemon objects (max TEAM_SIZE)
-  const [aiTeams, setAiTeams] = useState([])
-  const [activePlayerIndex, setActivePlayerIndex] = useState(0) // which team member is active (index)
-  const [activeAiIndex, setActiveAiIndex] = useState(0)
-  const [playerHPs, setPlayerHPs] = useState([]) // array of HPs
-  const [aiHPs, setAiHPs] = useState([])
-  const [playerMoves, setPlayerMoves] = useState({}) // name->moves array
-  const [aiMoves, setAiMoves] = useState({})
+  const [playerPokemon, setPlayerPokemon] = useState(null)
+  const [selectedPokemon, setSelectedPokemon] = useState(null);
+  const [aiPokemon, setAiPokemon] = useState(null)
+  const [playerHP, setPlayerHP] = useState(0)
+  const [aiHP, setAiHP] = useState(0)
+  const [playerMaxHP, setPlayerMaxHP] = useState(0)
+  const [aiMaxHP, setAiMaxHP] = useState(0)
+  const [playerMoves, setPlayerMoves] = useState([])
+  const [aiMoves, setAiMoves] = useState([])
   const [log, setLog] = useState([])
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+  const [turnCount, setTurnCount] = useState(0)
+  const [battleActive, setBattleActive] = useState(false)
   const mountedRef = useRef(true)
   const [loadingBattle, setLoadingBattle] = useState(false)
 
@@ -235,8 +237,10 @@ const BattleArena = () => {
     return () => clearTimeout(timer)
   }, [query, pokemonList])
 
-  // helper logs (prepend newest)
-  const pushLog = (entry) => setLog(prev => [entry, ...prev].slice(0, 150))
+  // helper logs (prepend newest - properly reversed)
+  const pushLog = (entry) => {
+    setLog(prev => [entry, ...prev].slice(0, 150))
+  }
 
   // choose random pokemon id in safe range
   const pickRandomBasic = async () => {
@@ -246,367 +250,478 @@ const BattleArena = () => {
   }
 
   // prepare teams and start battle
-  const startBattle = async (playerNames = []) => {
+  const startBattle = async (playerName = null) => {
     setLoadingBattle(true)
     setLog([])
     setMessage('')
+    setTurnCount(0)
+    setBattleActive(false)
     try {
-      // build player team: use provided names (up to TEAM_SIZE) or defaults; ensure lowercase
-      const players = []
-      for (let i = 0; i < TEAM_SIZE; i++) {
-        const name = (playerNames[i] && playerNames[i].trim()) || null
-        if (name) {
-          try {
-            const p = await fetchPokemonFull(name)
-            players.push(p)
-          } catch {
-            // fallback to random
-            const r = await pickRandomBasic()
-            players.push(r)
-          }
-        } else {
-          const r = await pickRandomBasic()
-          players.push(r)
+      // build player pokemon
+      let player
+      if (playerName && playerName.trim()) {
+        try {
+          player = await fetchPokemonFull(playerName.trim())
+        } catch {
+          player = await pickRandomBasic()
         }
-      }
-      // build AI team (random)
-      const ais = []
-      for (let i = 0; i < TEAM_SIZE; i++) {
-        const r = await pickRandomBasic()
-        ais.push(r)
+      } else {
+        player = await pickRandomBasic()
       }
 
-      // fetch/select moves for each pokemon (concurrently)
-      const playerMovesMap = {}
-      const aiMovesMap = {}
-      await Promise.all(players.map(async p => {
-        playerMovesMap[p.name] = await selectMovesForPokemon(p, 4)
-      }))
-      await Promise.all(ais.map(async p => {
-        aiMovesMap[p.name] = await selectMovesForPokemon(p, 4)
-      }))
+      // build AI pokemon (random)
+      const ai = await pickRandomBasic()
 
-      // HP arrays (use base hp scaled to percent of some base)
-      const pHPs = players.map(p => Math.max(1, Math.round((p.stats.hp || 50) * DEFAULT_HP_SCALE)))
-      const aHPs = ais.map(a => Math.max(1, Math.round((a.stats.hp || 50) * DEFAULT_HP_SCALE)))
+      // fetch moves
+      const pMoves = await selectMovesForPokemon(player, 4)
+      const aMoves = await selectMovesForPokemon(ai, 4)
+
+      // HP values - SAME SCALE for fair battles
+      const pMaxHP = Math.max(1, Math.round((player.stats.hp || 50) * DEFAULT_HP_SCALE))
+      const aMaxHP = Math.max(1, Math.round((ai.stats.hp || 50) * DEFAULT_HP_SCALE))
 
       if (!mountedRef.current) return
 
-      setPlayerTeams(players)
-      setAiTeams(ais)
-      setPlayerMoves(playerMovesMap)
-      setAiMoves(aiMovesMap)
-      setPlayerHPs(pHPs)
-      setAiHPs(aHPs)
-      setActivePlayerIndex(0)
-      setActiveAiIndex(0)
-      pushLog(`Battle started: You (${players.map(p=>p.name).join(', ')}) vs AI (${ais.map(a=>a.name).join(', ')})`)
-      setMessage('Battle engaged!')
+      setPlayerPokemon(player)
+      setAiPokemon(ai)
+      setPlayerMoves(pMoves)
+      setAiMoves(aMoves)
+      setPlayerHP(pMaxHP)
+      setAiHP(aMaxHP)
+      setPlayerMaxHP(pMaxHP)
+      setAiMaxHP(aMaxHP)
+      setBattleActive(true)
+      
+      // Enhanced battle start log - single entry to preserve order
+      pushLog(`╔════════════════════════════════════════╗
+║           BATTLE STARTED!        
+╚════════════════════════════════════════╝
+
+👤 YOUR POKÉMON: ${player.name.toUpperCase()}
+   Types: ${player.types.map(t => t.toUpperCase()).join(', ')}
+   HP: ${pMaxHP} | ATK: ${player.stats.attack} | DEF: ${player.stats.defense} | SPD: ${player.stats.speed}
+
+🤖 OPPONENT: ${ai.name.toUpperCase()}
+   Types: ${ai.types.map(t => t.toUpperCase()).join(', ')}
+   HP: ${aMaxHP} | ATK: ${ai.stats.attack} | DEF: ${ai.stats.defense} | SPD: ${ai.stats.speed}
+
+The battle begins! Choose your move!
+`)
+      
+      setMessage('Battle Started! Choose your move!')
     } catch (err) {
       console.error(err)
-      pushLog('Failed to start battle (API errors). Try again.')
+      pushLog('❌ Failed to start battle (API errors). Try again.')
       setMessage('Error starting battle.')
     } finally {
       if (mountedRef.current) setLoadingBattle(false)
     }
   }
 
-  // handle player using a move (index of move in player's move list)
+  // handle player using a move
   const playerUseMoveIndex = async (moveIdx) => {
-    if (busy) return
-    if (!playerTeams[activePlayerIndex] || !aiTeams[activeAiIndex]) return
-    if (playerHPs[activePlayerIndex] <= 0 || aiHPs[activeAiIndex] <= 0) return
+    if (busy || !battleActive) return
+    if (!playerPokemon || !aiPokemon) return
+    if (playerHP <= 0 || aiHP <= 0) return
+
     setBusy(true)
+    const currentTurn = turnCount + 1
+    setTurnCount(currentTurn)
 
-    const attacker = playerTeams[activePlayerIndex]
-    const defender = aiTeams[activeAiIndex]
-    const moves = playerMoves[attacker.name] || []
-    const move = moves[moveIdx] || moves[0]
-    // ensure move has type & power; if not, synthesize
-    const mv = { name: move.name, power: move.power || 10, type: move.type || attacker.types[0] || 'normal' }
+    const move = playerMoves[moveIdx] || playerMoves[0]
+    const mv = { name: move.name, power: move.power || 40, type: move.type || playerPokemon.types[0] || 'normal', accuracy: move.accuracy || 100 }
 
-    // compute damage
-    const { damage, typeMult, isCrit } = await computeDamageDetailed(attacker, defender, mv)
-    // subtract hp for AI
-    setAiHPs(prev => {
-      const copy = prev.slice()
-      copy[activeAiIndex] = clamp(copy[activeAiIndex] - damage, 0, 99999)
-      return copy
-    })
-    pushLog(`${attacker.name} used ${mv.name} and dealt ${damage} damage${isCrit ? ' (CRIT!)' : ''}${typeMult !== 1 ? ` (x${typeMult.toFixed(2)} type)` : ''}`)
-    setMessage(`${attacker.name} used ${mv.name}!`)
+    pushLog(`╭────────────────────────────────────────╮`)
+    pushLog(`│           TURN ${currentTurn}                        `)
+    pushLog(`╰────────────────────────────────────────╯`)
 
-    // animate hit by temporarily toggling a CSS class: we'll do this by updating a short-lived state key on the target (simple approach)
-    await new Promise(r => setTimeout(r, 450))
+    // Determine turn order based on speed
+    const playerSpeed = playerPokemon.stats.speed || 50
+    const aiSpeed = aiPokemon.stats.speed || 50
+    const playerFirst = playerSpeed >= aiSpeed
 
-    // check faint
-    const aiRemaining = (aiHPs[activeAiIndex] ?? 0) - damage
-    if (aiRemaining <= 0) {
-      pushLog(`AI's ${defender.name} fainted!`)
-      // find next alive ai member
-      const nextAi = aiHPs.findIndex((hp, idx) => idx !== activeAiIndex && hp > 0)
-      // note: use current state values to detect next; recreate arrays
-      const newAiHPs = (await Promise.resolve(aiHPs)).slice()
-      // Already updated in setAiHPs above; we'll check live
-      const nextAlive = newAiHPs.findIndex(hp => hp > 0)
-      if (newAiHPs.some(hp => hp > 0)) {
-        // choose next active AI (first alive)
-        const idx = newAiHPs.findIndex(hp => hp > 0)
-        setActiveAiIndex(idx)
-        pushLog(`AI sends out ${aiTeams[idx].name}!`)
-      } else {
-        pushLog('All AI Pokémon fainted! You win! 🎉')
-        setMessage('You win!')
-        setBusy(false)
-        return
+    if (playerFirst) {
+      pushLog(`⚡ ${playerPokemon.name.toUpperCase()} moves first! (Speed: ${playerSpeed})`)
+      pushLog(``)
+      await executePlayerTurn(mv, currentTurn)
+      if (aiHP > 0 && battleActive) {
+        await new Promise(r => setTimeout(r, 800))
+        await executeAiTurn(currentTurn)
+      }
+    } else {
+      pushLog(`⚡ ${aiPokemon.name.toUpperCase()} moves first! (Speed: ${aiSpeed})`)
+      pushLog(``)
+      await executeAiTurn(currentTurn)
+      if (playerHP > 0 && battleActive) {
+        await new Promise(r => setTimeout(r, 800))
+        await executePlayerTurn(mv, currentTurn)
       }
     }
 
-    // AI turn (small delay)
-    await new Promise(r => setTimeout(r, 650))
-    await aiTakeTurn()
+    pushLog(``)
     setBusy(false)
   }
 
-  const aiTakeTurn = async () => {
-    // ensure AI active and player active exist
-    const ai = aiTeams[activeAiIndex]
-    const player = playerTeams[activePlayerIndex]
-    if (!ai || !player) return
-    if ((aiHPs[activeAiIndex] ?? 0) <= 0) return
-    // choose a random move
-    const moves = aiMoves[ai.name] || []
-    const choice = moves[Math.floor(Math.random() * moves.length)] || { name: 'Tackle', power: 10, type: ai.types[0] || 'normal' }
-    const mv = { name: choice.name, power: choice.power || 10, type: choice.type || ai.types[0] || 'normal' }
+  const executePlayerTurn = async (mv, turn) => {
+    if (!battleActive || playerHP <= 0 || aiHP <= 0) return
 
-    const { damage, typeMult, isCrit } = await computeDamageDetailed(ai, player, mv)
+    const moveName = formatMoveName(mv.name)
+    pushLog(`👤 ${playerPokemon.name.toUpperCase()} used ${moveName}!`)
+    pushLog(`   └─ Type: ${mv.type.toUpperCase()} | Power: ${mv.power} | Accuracy: ${mv.accuracy}%`)
 
-    // subtract player hp
-    setPlayerHPs(prev => {
-      const copy = prev.slice()
-      copy[activePlayerIndex] = clamp(copy[activePlayerIndex] - damage, 0, 99999)
-      return copy
-    })
+    // compute damage
+    const { damage, typeMult, isCrit, missed } = await computeDamageDetailed(playerPokemon, aiPokemon, mv)
 
-    pushLog(`AI's ${ai.name} used ${mv.name} and dealt ${damage} damage${isCrit ? ' (CRIT!)' : ''}${typeMult !== 1 ? ` (x${typeMult.toFixed(2)} type)` : ''}`)
-    setMessage(`AI used ${mv.name}!`)
+    if (missed) {
+      pushLog(`   └─ 💨 The attack MISSED!`)
+      pushLog(``)
+      setMessage(`${playerPokemon.name}'s attack missed!`)
+      return
+    }
 
-    // check faint and switch if needed
-    await new Promise(r => setTimeout(r, 300))
-    const remaining = (playerHPs[activePlayerIndex] ?? 0) - damage
-    if (remaining <= 0) {
-      pushLog(`${player.name} fainted!`)
-      const nextIdx = playerHPs.findIndex((hp, idx) => idx !== activePlayerIndex && hp > 0)
-      if (playerHPs.some(hp => hp > 0)) {
-        const idx = playerHPs.findIndex(hp => hp > 0)
-        setActivePlayerIndex(idx)
-        pushLog(`You send out ${playerTeams[idx].name}!`)
-      } else {
-        pushLog('All your Pokémon fainted. You lose.')
-        setMessage('You lost — try again.')
-      }
+    // Update AI HP
+    const newAiHP = Math.max(0, aiHP - damage)
+    setAiHP(newAiHP)
+
+    const effectiveness = getEffectivenessMessage(typeMult)
+    const critText = isCrit ? ' [CRITICAL HIT!]' : ''
+    const typeMultText = typeMult !== 1 ? ` (×${typeMult.toFixed(1)} ${effectiveness})` : ''
+    
+    pushLog(`   └─ 💥 Hit for ${damage} damage!${critText}${typeMultText}`)
+    pushLog(`   └─ 🤖 ${aiPokemon.name}'s HP: ${newAiHP}/${aiMaxHP} (${Math.round((newAiHP/aiMaxHP)*100)}%)`)
+    pushLog(``)
+
+    setMessage(`${playerPokemon.name} dealt ${damage} damage!`)
+
+    await new Promise(r => setTimeout(r, 450))
+
+    // check faint
+    if (newAiHP <= 0) {
+      pushLog(`╔════════════════════════════════════════╗`)
+      pushLog(`║   💀 ${aiPokemon.name.toUpperCase()} FAINTED!`)
+      pushLog(`╚════════════════════════════════════════╝`)
+      pushLog(``)
+      pushLog(`🎉 VICTORY! You won in ${turn} turns!`)
+      pushLog(``)
+      pushLog(`📊 BATTLE SUMMARY:`)
+      pushLog(`   • Your ${playerPokemon.name}: ${playerHP}/${playerMaxHP} HP remaining`)
+      pushLog(`   • Opponent ${aiPokemon.name}: Defeated`)
+      pushLog(`   • Total turns: ${turn}`)
+      pushLog(``)
+      
+      setMessage('🎉 You win!')
+      setBattleActive(false)
     }
   }
 
-  // reset HPs only
-  const resetHPs = () => {
-    setPlayerHPs(playerTeams.map(p => Math.max(1, Math.round((p.stats.hp || 50) * DEFAULT_HP_SCALE))))
-    setAiHPs(aiTeams.map(a => Math.max(1, Math.round((a.stats.hp || 50) * DEFAULT_HP_SCALE))))
-    setLog([])
-    setMessage('HP restored')
+  const executeAiTurn = async (turn) => {
+    if (!battleActive || aiHP <= 0 || playerHP <= 0) return
+
+    // choose a random move
+    const choice = aiMoves[Math.floor(Math.random() * aiMoves.length)] || { name: 'Tackle', power: 40, type: aiPokemon.types[0] || 'normal', accuracy: 100 }
+    const mv = { name: choice.name, power: choice.power || 40, type: choice.type || aiPokemon.types[0] || 'normal', accuracy: choice.accuracy || 100 }
+
+    const moveName = formatMoveName(mv.name)
+    pushLog(`🤖 ${aiPokemon.name.toUpperCase()} used ${moveName}!`)
+    pushLog(`   └─ Type: ${mv.type.toUpperCase()} | Power: ${mv.power} | Accuracy: ${mv.accuracy}%`)
+
+    const { damage, typeMult, isCrit, missed } = await computeDamageDetailed(aiPokemon, playerPokemon, mv)
+
+    if (missed) {
+      pushLog(`   └─ 💨 The attack MISSED!`)
+      pushLog(``)
+      setMessage(`${aiPokemon.name}'s attack missed!`)
+      return
+    }
+
+    // Update player HP
+    const newPlayerHP = Math.max(0, playerHP - damage)
+    setPlayerHP(newPlayerHP)
+
+    const effectiveness = getEffectivenessMessage(typeMult)
+    const critText = isCrit ? ' [CRITICAL HIT!]' : ''
+    const typeMultText = typeMult !== 1 ? ` (×${typeMult.toFixed(1)} ${effectiveness})` : ''
+    
+    pushLog(`   └─ 💥 Hit for ${damage} damage!${critText}${typeMultText}`)
+    pushLog(`   └─ 👤 ${playerPokemon.name}'s HP: ${newPlayerHP}/${playerMaxHP} (${Math.round((newPlayerHP/playerMaxHP)*100)}%)`)
+    pushLog(``)
+
+    setMessage(`${aiPokemon.name} dealt ${damage} damage!`)
+
+    await new Promise(r => setTimeout(r, 300))
+
+    // check faint
+    if (newPlayerHP <= 0) {
+      pushLog(`╔════════════════════════════════════════╗`)
+      pushLog(`║   💀 ${playerPokemon.name.toUpperCase()} FAINTED!`)
+      pushLog(`╚════════════════════════════════════════╝`)
+      pushLog(``)
+      pushLog(`DEFEAT! You lost in ${turn} turns.`)
+      pushLog(``)
+      pushLog(`📊 BATTLE SUMMARY:`)
+      pushLog(`   • Your ${playerPokemon.name}: Defeated`)
+      pushLog(`   • Opponent ${aiPokemon.name}: ${aiHP}/${aiMaxHP} HP remaining`)
+      pushLog(`   • Total turns: ${turn}`)
+      pushLog(``)
+      
+      setMessage('You lost — try again!')
+      setBattleActive(false)
+    }
   }
 
-  // quick helpers for UI
-  const activePlayer = playerTeams[activePlayerIndex]
-  const activeAi = aiTeams[activeAiIndex]
-  const activePlayerMoves = activePlayer ? (playerMoves[activePlayer.name] || []) : []
-  const activeAiMoves = activeAi ? (aiMoves[activeAi.name] || []) : []
-
-  // autocomplete selection handler
-  const addPlayerByName = (name) => {
-    if (!name) return
-    setQuery('')
-    setSuggestions([])
-    // append to teams (replace first empty slot)
-    setPlayerTeams(prev => {
-      const copy = prev.slice()
-      if (copy.length < TEAM_SIZE) {
-        // fetch and append later via startBattle flow or fetch here
-        return copy.concat([]) // no op here: better use startBattle to build full teams
-      }
-      return copy
-    })
+  // helper UI: show move label
+  const moveLabel = (m) => {
+    const name = formatMoveName(m?.name || 'Move')
+    return `${name} ${m?.power ? `(${m.power})` : ''}`
   }
 
-  // helper UI: show move label (prefer real name)
-  const moveLabel = (m) => `${(m?.name || 'Move').replace('-', ' ')} ${m?.power ? `(${m.power})` : ''}`
+  const getHPPercentage = (current, max) => {
+    return clamp((current / Math.max(1, max)) * 100, 0, 100)
+  }
+
+  const getHPColor = (percentage) => {
+    if (percentage > 50) return 'bg-green-500'
+    if (percentage > 25) return 'bg-yellow-500'
+    return 'bg-red-500'
+  }
 
   // UI render
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-7xl mx-auto">
       <style>{styles}</style>
-      <h1 className="text-2xl font-bold mb-4">Battle Arena (Single-player vs AI)</h1>
+      <h1 className="text-3xl font-bold mb-2 text-center">Pokémon Battle Arena</h1>
+      <p className="text-center text-gray-600 dark:text-gray-400 mb-6">1v1 Turn-Based Combat</p>
 
-      <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="col-span-2">
+      <div className="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left column: Setup */}
+        <div className="lg:col-span-2">
           {/* Team chooser + start */}
-          <div className="mb-3 p-3 border rounded bg-white dark:bg-gray-900">
-            <div className="flex items-center gap-3">
-              <div className="w-full">
-                <label className="text-sm text-gray-600 dark:text-gray-300">Choose up to {TEAM_SIZE} Pokémon (autocomplete)</label>
-                <input
-                  className="w-full input mt-1 px-3 py-2 border rounded"
-                  placeholder="Type a name (e.g. pikachu), select suggestion, press Add — or click Quick Start"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-                {suggestions.length > 0 && (
-                  <div className="bg-white dark:bg-gray-800 border rounded mt-1 max-h-44 overflow-auto z-50">
-                    {suggestions.map(s => (
-                      <div key={s} className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" onClick={() => setQuery(s)}>
-                        {s}
-                      </div>
-                    ))}
-                  </div>
+          <div className="mb-4 p-4 border rounded-lg bg-white dark:bg-gray-900 shadow-sm">
+            <h3 className="font-semibold mb-3">Choose Your Pokémon</h3>
+            <div className="flex flex-col md:flex-row items-stretch gap-3">
+              <div className="flex-1">
+                {/* Selected Pokémon chip */}
+                {selectedPokemon && (
+                    <div className="flex items-center space-x-2 mb-2 px-3 py-1 bg-blue-100 dark:bg-blue-900 rounded-full text-sm">
+                    <span className="capitalize">{selectedPokemon}</span>
+                    <button
+                        type="button"
+                        className="text-blue-700 dark:text-blue-300 font-bold"
+                        onClick={() => setSelectedPokemon(null)}
+                    >
+                        ✕
+                    </button>
+                    </div>
                 )}
-              </div>
+
+                {/* Input */}
+                <input
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Type a Pokémon name (e.g., pikachu, charizard)..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    disabled={loadingBattle}
+                />
+
+                {/* Suggestions */}
+                {suggestions.length > 0 && (
+                    <div className="bg-white dark:bg-gray-800 border rounded-lg mt-2 max-h-48 overflow-auto shadow-lg z-50">
+                    {suggestions.map(s => (
+                        <div 
+                        key={s} 
+                        className={`px-4 py-2 hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer capitalize transition-colors ${
+                            s === selectedPokemon ? "bg-blue-100 dark:bg-blue-900" : ""
+                        }`}
+                        onClick={() => {
+                            setSelectedPokemon(s);
+                            setQuery(""); // clear input after selection
+                        }}
+                        >
+                        {s}
+                        </div>
+                    ))}
+                    </div>
+                )}
+                </div>
 
               <button
-                className="px-3 py-2 rounded bg-green-600 text-white"
+                className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => {
-                  if (!query) return
-                  // start battle with this name in first slot, others random
-                  startBattle([query])
+                    if (!selectedPokemon) return
+                    startBattle(selectedPokemon)
                 }}
-                disabled={loadingBattle}
-              >
-                Add & Start
+                disabled={loadingBattle || !selectedPokemon} // use selectedPokemon instead of query
+                >
+                Start Battle
               </button>
 
               <button
-                className="px-3 py-2 rounded border"
-                onClick={() => startBattle([])}
+                className="px-6 py-2 rounded-lg border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => startBattle(null)}
                 disabled={loadingBattle}
               >
-                Quick Start (Random Teams)
+                Random Battle
               </button>
             </div>
 
-            <div className="mt-3 text-xs text-gray-500">
-              Tip: autocomplete is debounced. Pick names exactly or use Quick Start for random fun.
+            <div className="mt-3 text-sm text-gray-500">
+              💡 Tip: Type to search, or click Random Battle for instant action!
             </div>
           </div>
 
           {/* battlefield */}
-          <div className="rounded-lg border p-4 bg-white dark:bg-gray-900 dark:border-gray-800">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div className="rounded-lg border-2 p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 shadow-lg relative">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
               {/* Player side */}
               <div className="text-center">
-                <h3 className="font-semibold">Your Team</h3>
-                <div className="mt-3 grid grid-cols-3 gap-3">
-                  {playerTeams.length === 0 && <div className="col-span-3 text-sm text-gray-500">No team yet — use Quick Start or add a Pokémon</div>}
-                  {playerTeams.map((p, idx) => {
-                    const hp = playerHPs[idx] ?? 0
-                    const faintClass = hp <= 0 ? 'battle-faint' : ''
-                    const activeClass = idx === activePlayerIndex ? 'ring-2 ring-indigo-400' : ''
-                    return (
-                      <div key={p.name} className={`p-2 rounded border bg-white dark:bg-gray-800 ${activeClass}`}>
-                        <div className="flex flex-col items-center">
-                          {p.sprite ? <img src={p.sprite} alt={p.name} className={`w-20 h-20 object-contain ${faintClass}`} /> : <div className="w-20 h-20 bg-gray-100 rounded" />}
-                          <p className="capitalize mt-1 text-sm font-medium">{p.name}</p>
-                          <p className="text-xs text-gray-500">HP: {hp}</p>
-                          <div className="mt-1 w-full bg-gray-200 h-2 rounded overflow-hidden">
-                            <div className="h-2 bg-green-500 transition-all" style={{ width: `${clamp((hp / Math.max(1, Math.round((p.stats.hp||50)*DEFAULT_HP_SCALE))) * 100, 0, 100)}%` }} />
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                <div className="mt-4">
-                  <h4 className="font-semibold">Active: {activePlayer?.name || '—'}</h4>
-                  <div className="mt-2 flex flex-col md:flex-row gap-2">
-                    {activePlayerMoves.map((m, idx) => (
-                      <button
-                        key={m.name + idx}
-                        onClick={() => playerUseMoveIndex(idx)}
-                        disabled={busy || (playerHPs[activePlayerIndex] ?? 0) <= 0 || (aiHPs[activeAiIndex] ?? 0) <= 0}
-                        className="px-3 py-2 rounded border bg-gray-50 hover:bg-gray-100 text-sm"
-                      >
-                        {moveLabel(m)}
-                        <div className="text-xs text-gray-400">{m.type}</div>
-                      </button>
-                    ))}
+                <h3 className="font-bold text-lg mb-4 text-blue-700 dark:text-blue-400">👤 YOUR POKÉMON</h3>
+                {!playerPokemon ? (
+                  <div className="p-8 rounded-lg border-2 border-dashed border-gray-300 bg-white dark:bg-gray-800">
+                    <p className="text-gray-500">Choose a Pokémon to begin!</p>
                   </div>
-                </div>
+                ) : (
+                  <div className={`battle-card p-6 rounded-xl border-2 bg-white dark:bg-gray-800 shadow-lg ${playerHP <= 0 ? 'battle-faint border-gray-300' : 'border-blue-400'}`}>
+                    <div className="flex flex-col items-center">
+                      {playerPokemon.sprite ? (
+                        <img 
+                          src={playerPokemon.sprite} 
+                          alt={playerPokemon.name} 
+                          className={`w-32 h-32 object-contain ${playerHP <= 0 ? 'battle-faint' : ''}`} 
+                        />
+                      ) : (
+                        <div className="w-32 h-32 bg-gray-200 rounded-lg" />
+                      )}
+                      <p className="capitalize mt-3 text-xl font-bold">{playerPokemon.name}</p>
+                      <div className="flex gap-2 mt-2">
+                        {playerPokemon.types.map(t => (
+                          <span key={t} className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-lg font-semibold mt-3">HP: {playerHP}/{playerMaxHP}</p>
+                      <div className="mt-2 w-full bg-gray-200 h-4 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-4 transition-all duration-500 ${getHPColor(getHPPercentage(playerHP, playerMaxHP))}`}
+                          style={{ width: `${getHPPercentage(playerHP, playerMaxHP)}%` }} 
+                        />
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">Speed: {playerPokemon.stats.speed || 50}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Moves */}
+                {playerPokemon && battleActive && playerHP > 0 && aiHP > 0 && (
+                  <div className="mt-6">
+                    <h4 className="font-semibold mb-3">Choose Your Move:</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      {playerMoves.map((m, idx) => (
+                        <button
+                          key={m.name + idx}
+                          onClick={() => playerUseMoveIndex(idx)}
+                          disabled={busy}
+                          className="battle-card px-4 py-3 rounded-lg border-2 border-gray-300 bg-white hover:bg-blue-50 hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          <div className="font-semibold text-sm">{moveLabel(m)}</div>
+                          <div className="text-xs text-gray-500 capitalize mt-1">{m.type}</div>
+                          {m.accuracy && m.accuracy < 100 && (
+                            <div className="text-xs text-orange-500 mt-1">Acc: {m.accuracy}%</div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* AI side */}
               <div className="text-center">
-                <h3 className="font-semibold">AI Team</h3>
-                <div className="mt-3 grid grid-cols-3 gap-3">
-                  {aiTeams.length === 0 && <div className="col-span-3 text-sm text-gray-500">No AI team — Quick Start to generate</div>}
-                  {aiTeams.map((p, idx) => {
-                    const hp = aiHPs[idx] ?? 0
-                    const faintClass = hp <= 0 ? 'battle-faint' : ''
-                    const activeClass = idx === activeAiIndex ? 'ring-2 ring-red-400' : ''
-                    return (
-                      <div key={p.name} className={`p-2 rounded border bg-white dark:bg-gray-800 ${activeClass}`}>
-                        <div className="flex flex-col items-center">
-                          {p.sprite ? <img src={p.sprite} alt={p.name} className={`w-20 h-20 object-contain ${faintClass}`} /> : <div className="w-20 h-20 bg-gray-100 rounded" />}
-                          <p className="capitalize mt-1 text-sm font-medium">{p.name}</p>
-                          <p className="text-xs text-gray-500">HP: {hp}</p>
-                          <div className="mt-1 w-full bg-gray-200 h-2 rounded overflow-hidden">
-                            <div className="h-2 bg-red-500 transition-all" style={{ width: `${clamp((hp / Math.max(1, Math.round((p.stats.hp||50)*DEFAULT_HP_SCALE))) * 100, 0, 100)}%` }} />
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                <div className="mt-4">
-                  <h4 className="font-semibold">AI Active: {activeAi?.name || '—'}</h4>
-                  <div className="mt-2 text-sm text-gray-500">
-                    AI moves are chosen automatically.
+                <h3 className="font-bold text-lg mb-4 text-red-700 dark:text-red-400">🤖 DEVS POKÉMON</h3>
+                {!aiPokemon ? (
+                  <div className="p-8 rounded-lg border-2 border-dashed border-gray-300 bg-white dark:bg-gray-800">
+                    <p className="text-gray-500">Waiting for opponent...</p>
                   </div>
-                </div>
+                ) : (
+                  <div className={`battle-card p-6 rounded-xl border-2 bg-white dark:bg-gray-800 shadow-lg ${aiHP <= 0 ? 'battle-faint border-gray-300' : 'border-red-400'}`}>
+                    <div className="flex flex-col items-center">
+                      {aiPokemon.sprite ? (
+                        <img 
+                          src={aiPokemon.sprite} 
+                          alt={aiPokemon.name} 
+                          className={`w-32 h-32 object-contain ${aiHP <= 0 ? 'battle-faint' : ''}`} 
+                        />
+                      ) : (
+                        <div className="w-32 h-32 bg-gray-200 rounded-lg" />
+                      )}
+                      <p className="capitalize mt-3 text-xl font-bold">{aiPokemon.name}</p>
+                      <div className="flex gap-2 mt-2">
+                        {aiPokemon.types.map(t => (
+                          <span key={t} className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-lg font-semibold mt-3">HP: {aiHP}/{aiMaxHP}</p>
+                      <div className="mt-2 w-full bg-gray-200 h-4 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-4 transition-all duration-500 ${getHPColor(getHPPercentage(aiHP, aiMaxHP))}`}
+                          style={{ width: `${getHPPercentage(aiHP, aiMaxHP)}%` }} 
+                        />
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">Speed: {aiPokemon.stats.speed || 50}</p>
+                    </div>
+                  </div>
+                )}
+
+                {aiPokemon && (
+                  <div className="mt-6 p-4 bg-white dark:bg-gray-800 rounded-lg border">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">The opponent will choose moves automatically</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="mt-6 flex gap-3">
-              <button onClick={() => resetHPs()} className="px-3 py-2 rounded border">Reset HP</button>
-              <button onClick={() => startBattle([])} className="px-3 py-2 rounded bg-blue-600 text-white">Randomize Teams</button>
-              <button onClick={() => setLog([])} className="px-3 py-2 rounded border">Clear Log</button>
+            {/* VS Label - Centered between containers */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+              <div className="bg-red-600 text-white font-bold text-2xl px-6 py-3 rounded-full shadow-xl border-4 border-white">
+                VS
+              </div>
             </div>
 
-            <div className="mt-4">
-              <p className="text-sm text-gray-600">Status: {message || 'Waiting...'}</p>
+            {/* Battle Status */}
+            <div className="mt-6 p-4 bg-white dark:bg-gray-800 rounded-lg border-2 text-center">
+              <p className="font-semibold text-lg">{message || 'Waiting for battle to start...'}</p>
+              {battleActive && <p className="text-sm text-gray-500 mt-1">Turn: {turnCount}</p>}
             </div>
           </div>
         </div>
 
-        {/* right column: log */}
-        <div className="col-span-1">
-          <div className="rounded-lg border p-3 h-full bg-gray-50 dark:bg-gray-800">
-            <h4 className="font-semibold mb-2">Battle Log</h4>
-            <div className="space-y-2 max-h-72 overflow-auto">
-              {log.length === 0 && <p className="text-sm text-gray-500">Actions will appear here.</p>}
-              {log.map((l, idx) => (
-                <div key={idx} className="text-sm bg-white dark:bg-gray-900 p-2 rounded shadow-sm">
+        {/* Right column: Battle Log */}
+        <div className="lg:col-span-1">
+          <div className="rounded-lg border-2 p-4 h-full bg-white dark:bg-gray-900 shadow-lg">
+            <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
+              Battle Log
+              {turnCount > 0 && <span className="text-sm font-normal text-gray-500">(Turn {turnCount})</span>}
+            </h4>
+            <div className="space-y-1 max-h-[600px] overflow-auto font-mono text-xs">
+              {log.length === 0 && (
+                <p className="text-sm text-gray-500 italic">Battle logs will appear here...</p>
+              )}
+              {log.slice().reverse().map((l, idx) => (
+                <div 
+                  key={idx} 
+                  className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed"
+                >
                   {l}
                 </div>
               ))}
             </div>
 
-            <div className="mt-4">
-              <button onClick={() => setLog([])} className="px-3 py-1 rounded border text-sm">Clear Log</button>
-              <button onClick={() => startBattle([])} className="ml-2 px-3 py-1 rounded bg-blue-600 text-white text-sm">Randomize Opponent</button>
-            </div>
-
-            <div className="mt-4 text-xs text-gray-500">
-              <p>Damage uses attack/defense, move power, type multipliers, randomness, and critical hits. Moves are fetched from PokéAPI when available and cached.</p>
+            <div className="mt-4 pt-4 border-t">
+              <p className="text-xs text-gray-500">
+                Damage is calculated using attack/defense stats, move power, type effectiveness, accuracy, and critical hits.
+              </p>
             </div>
           </div>
         </div>
