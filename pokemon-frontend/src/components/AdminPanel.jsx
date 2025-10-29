@@ -1099,15 +1099,15 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         </div>
                         
                         {order.customer_info && (
-                          <div className="text-xs bg-blue-50 p-3 rounded border border-blue-200 mt-3">
-                            <p className="font-semibold text-gray-700 mb-1">📦 Shipping Information:</p>
-                            <p className="text-gray-600">{order.customer_info.name}</p>
-                            <p className="text-gray-600">{order.customer_info.email}</p>
-                            <p className="text-gray-600">{order.customer_info.address}</p>
-                            <p className="text-gray-600">{order.customer_info.city}, {order.customer_info.state} {order.customer_info.zipCode}</p>
-                            <p className="text-gray-600">{order.customer_info.country}</p>
+                          <div className="text-xs bg-blue-50 dark:bg-gray-700 p-3 rounded border border-blue-200 dark:border-gray-600 mt-3">
+                            <p className="font-semibold text-gray-700 dark:text-gray-200 mb-1">📦 Shipping Information:</p>
+                            <p className="text-gray-600 dark:text-gray-300">{order.customer_info.name}</p>
+                            <p className="text-gray-600 dark:text-gray-300">{order.customer_info.email}</p>
+                            <p className="text-gray-600 dark:text-gray-300">{order.customer_info.address}</p>
+                            <p className="text-gray-600 dark:text-gray-300">{order.customer_info.city}, {order.customer_info.state} {order.customer_info.zipCode}</p>
+                            <p className="text-gray-600 dark:text-gray-300">{order.customer_info.country}</p>
                             {order.customer_info.phone && (
-                              <p className="text-gray-600 mt-1">📞 {order.customer_info.phone}</p>
+                              <p className="text-gray-600 dark:text-gray-300 mt-1">📞 {order.customer_info.phone}</p>
                             )}
                           </div>
                         )}
@@ -1175,15 +1175,15 @@ const AdminPanel = ({ user, onCardUpdate }) => {
                         </div>
                         
                         {order.customer_info && (
-                          <div className="text-xs bg-blue-50 p-3 rounded border border-blue-200 mt-3">
-                            <p className="font-semibold text-gray-700 mb-1">📦 Shipping Information:</p>
-                            <p className="text-gray-600">{order.customer_info.name}</p>
-                            <p className="text-gray-600">{order.customer_info.email}</p>
-                            <p className="text-gray-600">{order.customer_info.address}</p>
-                            <p className="text-gray-600">{order.customer_info.city}, {order.customer_info.state} {order.customer_info.zipCode}</p>
-                            <p className="text-gray-600">{order.customer_info.country}</p>
+                          <div className="text-xs bg-blue-50 dark:bg-gray-700 p-3 rounded border border-blue-200 dark:border-gray-600 mt-3">
+                            <p className="font-semibold text-gray-700 dark:text-gray-200 mb-1">📦 Shipping Information:</p>
+                            <p className="text-gray-600 dark:text-gray-300">{order.customer_info.name}</p>
+                            <p className="text-gray-600 dark:text-gray-300">{order.customer_info.email}</p>
+                            <p className="text-gray-600 dark:text-gray-300">{order.customer_info.address}</p>
+                            <p className="text-gray-600 dark:text-gray-300">{order.customer_info.city}, {order.customer_info.state} {order.customer_info.zipCode}</p>
+                            <p className="text-gray-600 dark:text-gray-300">{order.customer_info.country}</p>
                             {order.customer_info.phone && (
-                              <p className="text-gray-600 mt-1">📞 {order.customer_info.phone}</p>
+                              <p className="text-gray-600 dark:text-gray-300 mt-1">📞 {order.customer_info.phone}</p>
                             )}
                           </div>
                         )}

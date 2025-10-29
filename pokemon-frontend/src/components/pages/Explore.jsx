@@ -4,9 +4,13 @@ import { fetchSeries, fetchSets, fetchCardsBySet } from '/src/lib/tcgdex';
 import SeriesGrid from '/src/components/explore/SeriesGrid';
 import SetsGrid from '/src/components/explore/SetsGrid';
 import CardsGrid from '/src/components/explore/CardsGrid';
+import PokemonSearch from '/src/components/explore/PokemonSearch';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function Explore() {
+  // Toggle between "Sets" and "Pokemon" modes
+  const [viewMode, setViewMode] = useState('sets'); // 'sets' or 'pokemon'
+
   const [series, setSeries] = useState([]);
   const [loadingSeries, setLoadingSeries] = useState(false);
   const [selectedSerie, setSelectedSerie] = useState(null);
@@ -115,137 +119,171 @@ export default function Explore() {
 
   return (
     <div className="space-y-6">
-      {/* Series Section */}
-      <section className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div 
-          className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-          onClick={() => setSeriesExpanded(!seriesExpanded)}
-        >
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {selectedSerie ? selectedSerie.name : 'Explore Series'}
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              {selectedSerie 
-                ? 'Click to view all series' 
-                : 'Browse Pokémon TCG series. Click a series to see sets.'}
-            </p>
-          </div>
-          <button className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-            {seriesExpanded ? (
-              <ChevronUp className="w-5 h-5 text-gray-600" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-600" />
-            )}
+      {/* Toggle Section - Sets vs Pokemon */}
+      <div className="flex justify-start">
+        <div className="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-1 shadow-sm">
+          <button
+            onClick={() => setViewMode('sets')}
+            className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+              viewMode === 'sets'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+          >
+            Sets
+          </button>
+          <button
+            onClick={() => setViewMode('pokemon')}
+            className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+              viewMode === 'pokemon'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+          >
+            Singles
           </button>
         </div>
-        
-        {seriesExpanded && (
-          <div className="p-4 pt-0 border-t border-gray-100">
-            <SeriesGrid 
-              series={series} 
-              loading={loadingSeries} 
-              onSeriesClick={onSerieClick} 
-              selected={selectedSerie} 
-            />
-          </div>
-        )}
-      </section>
+      </div>
 
-      {/* Sets Section */}
-      {selectedSerie && (
-        <section className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div 
-            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-            onClick={() => setSetsExpanded(!setsExpanded)}
-          >
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                {selectedSet ? selectedSet.name : `Sets in ${selectedSerie.name}`}
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">
-                {loadingSets ? 'Loading sets...' : `${sets.length} sets available`}
-              </p>
-            </div>
-            <button className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-              {setsExpanded ? (
-                <ChevronUp className="w-5 h-5 text-gray-600" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-gray-600" />
-              )}
-            </button>
-          </div>
-          
-          {setsExpanded && (
-            <div className="p-4 pt-0 border-t border-gray-100">
-              <SetsGrid 
-                sets={sets} 
-                loading={loadingSets} 
-                onSetClick={onSetClick} 
-                selectedSet={selectedSet} 
-              />
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* Cards Section */}
-      {selectedSet && (
-        <section id="cards-section" className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-lg shadow-md border border-indigo-200 overflow-hidden">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
+      {/* Conditional Rendering based on viewMode */}
+      {viewMode === 'sets' ? (
+        <>
+          {/* Series Section */}
+          <section className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div 
+              className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              onClick={() => setSeriesExpanded(!seriesExpanded)}
+            >
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  Cards in {selectedSet.name}
-                </h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  {loadingCards ? 'Loading cards...' : `${filteredCards.length} cards`}
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  {selectedSerie ? selectedSerie.name : 'Explore Series'}
+                </h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  {selectedSerie 
+                    ? 'Click to view all series' 
+                    : 'Browse Pokémon TCG series. Click a series to see sets.'}
                 </p>
               </div>
-              
-              {/* Filter Buttons */}
-              {!loadingCards && filteredCards.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setSortBy('alphabetical')}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                        sortBy === 'alphabetical'
-                          ? 'bg-indigo-600 text-white shadow-md'
-                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                      }`}
-                    >
-                      A-Z
-                    </button>
-                    <button
-                      onClick={() => setSortBy('price')}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                        sortBy === 'price'
-                          ? 'bg-indigo-600 text-white shadow-md'
-                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                      }`}
-                    >
-                      Price
-                    </button>
-                    <button
-                      onClick={() => setSortBy('number')}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                        sortBy === 'number'
-                          ? 'bg-indigo-600 text-white shadow-md'
-                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                      }`}
-                    >
-                      Set #
-                    </button>
-                  </div>
-                </div>
-              )}
+              <button className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors">
+                {seriesExpanded ? (
+                  <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                )}
+              </button>
             </div>
             
-            <CardsGrid cards={filteredCards} loading={loadingCards} />
-          </div>
-        </section>
+            {seriesExpanded && (
+              <div className="p-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <SeriesGrid 
+                  series={series} 
+                  loading={loadingSeries} 
+                  onSeriesClick={onSerieClick} 
+                  selected={selectedSerie} 
+                />
+              </div>
+            )}
+          </section>
+
+          {/* Sets Section */}
+          {selectedSerie && (
+            <section className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div 
+                className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                onClick={() => setSetsExpanded(!setsExpanded)}
+              >
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                    {selectedSet ? selectedSet.name : `Sets in ${selectedSerie.name}`}
+                  </h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {loadingSets ? 'Loading sets...' : `${sets.length} sets available`}
+                  </p>
+                </div>
+                <button className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors">
+                  {setsExpanded ? (
+                    <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  )}
+                </button>
+              </div>
+              
+              {setsExpanded && (
+                <div className="p-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <SetsGrid 
+                    sets={sets} 
+                    loading={loadingSets} 
+                    onSetClick={onSetClick} 
+                    selectedSet={selectedSet} 
+                  />
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Cards Section */}
+          {selectedSet && (
+            <section id="cards-section" className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 rounded-lg shadow-md border border-indigo-200 dark:border-gray-700 overflow-hidden">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      Cards in {selectedSet.name}
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      {loadingCards ? 'Loading cards...' : `${filteredCards.length} cards`}
+                    </p>
+                  </div>
+                  
+                  {/* Filter Buttons */}
+                  {!loadingCards && filteredCards.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setSortBy('alphabetical')}
+                          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                            sortBy === 'alphabetical'
+                              ? 'bg-indigo-600 text-white shadow-md'
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          A-Z
+                        </button>
+                        <button
+                          onClick={() => setSortBy('price')}
+                          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                            sortBy === 'price'
+                              ? 'bg-indigo-600 text-white shadow-md'
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          Price
+                        </button>
+                        <button
+                          onClick={() => setSortBy('number')}
+                          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                            sortBy === 'number'
+                              ? 'bg-indigo-600 text-white shadow-md'
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          Set #
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <CardsGrid cards={filteredCards} loading={loadingCards} />
+              </div>
+            </section>
+          )}
+        </>
+      ) : (
+        /* Pokemon Search Mode */
+        <PokemonSearch />
       )}
     </div>
   );

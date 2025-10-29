@@ -4,7 +4,7 @@ const SetsGrid = ({ sets = [], selectedSet, onSetClick }) => {
   return (
     <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2">
       {sets.length === 0 ? (
-        <div className="col-span-full text-center text-gray-500">
+        <div className="col-span-full text-center text-gray-500 dark:text-gray-400">
           No sets available
         </div>
       ) : (
@@ -15,8 +15,8 @@ const SetsGrid = ({ sets = [], selectedSet, onSetClick }) => {
             <button
               key={set.id || set.code || set.name}
               onClick={() => onSetClick(set)}
-              className={`p-3 rounded-md border bg-white/5 flex flex-col items-center hover:shadow-md ${
-                selectedSet && selectedSet.id === set.id ? 'ring-2 ring-indigo-400' : ''
+              className={`p-3 rounded-md border bg-white dark:bg-gray-700 flex flex-col items-center hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-all ${
+                selectedSet && selectedSet.id === set.id ? 'ring-2 ring-indigo-400 dark:ring-indigo-500' : 'border-gray-200 dark:border-gray-600'
               }`}
             >
               {logoUrl ? (
@@ -30,13 +30,13 @@ const SetsGrid = ({ sets = [], selectedSet, onSetClick }) => {
                   }}
                 />
               ) : (
-                <div className="w-28 h-20 flex items-center justify-center bg-white/10 rounded mb-2 text-sm">
+                <div className="w-28 h-20 flex items-center justify-center bg-gray-100 dark:bg-gray-600 rounded mb-2 text-sm text-gray-700 dark:text-gray-300">
                   {set.name}
                 </div>
               )}
 
-              <div className="text-sm font-medium text-center">{set.name}</div>
-              <div className="text-xs text-gray-400">{set.releaseDate ?? ''}</div>
+              <div className="text-sm font-medium text-center text-gray-900 dark:text-gray-100">{set.name}</div>
+              <div className="text-xs text-gray-400 dark:text-gray-500">{set.releaseDate ?? ''}</div>
             </button>
           );
         })

@@ -167,11 +167,11 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
 
       {/* Filter Header + Animated Dropdown Panel */}
       <div className="mb-6 relative" ref={dropdownRef}>
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           {/* Header Button */}
           <button
             onClick={() => setIsFiltersOpen((s) => !s)}
-            className="flex items-center justify-between w-full px-4 py-3 border-b border-gray-200 bg-gray-50 cursor-pointer"
+            className="flex items-center justify-between w-full px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 cursor-pointer"
             aria-expanded={isFiltersOpen}
             aria-controls="filter-panel"
             type="button"
@@ -202,12 +202,12 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.35, ease: 'easeInOut' }}
-                className="overflow-hidden border-t border-gray-100 bg-white"
+                className="overflow-hidden border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800"
               >
                 <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Search */}
                   <div className="md:col-span-2 lg:col-span-2">
-                    <label className="text-xs font-medium text-gray-600 mb-1.5 block">Search</label>
+                    <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5 block">Search</label>
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                       <Input
@@ -221,13 +221,13 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
 
                   {/* Product Type */}
                   <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1.5 block">Product Type</label>
+                    <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5 block">Product Type</label>
                     <select
                       value={selectedProductType}
                       onChange={(e) => {
                         setSelectedProductType(e.target.value)
                       }}
-                      className="w-full h-9 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full h-9 px-3 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     >
                       <option value="">All Types</option>
                       {productTypes.map((type) => (
@@ -240,7 +240,7 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
 
                   {/* Price Range */}
                   <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1.5 block">Price Range (ETH)</label>
+                    <label className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5 block">Price Range (ETH)</label>
                     <div className="flex gap-2 items-center">
                       <Input
                         type="number"
@@ -265,8 +265,8 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
 
                 {/* Active Filters */}
                 {(selectedProductType || selectedRarity || priceRange.min || priceRange.max || searchTerm) && (
-                  <div className="px-4 pb-3 flex flex-wrap gap-2 items-center border-t border-gray-100 pt-3">
-                    <span className="text-xs text-gray-600 font-medium">Active:</span>
+                  <div className="px-4 pb-3 flex flex-wrap gap-2 items-center border-t border-gray-100 dark:border-gray-700 pt-3">
+                    <span className="text-xs text-gray-600 dark:text-gray-300 font-medium">Active:</span>
 
                     {searchTerm && (
                       <Badge variant="secondary" className="text-xs">
@@ -295,7 +295,7 @@ const CardGrid = ({ cards, loading, user, onCardPurchase }) => {
                   </div>
                 )}
 
-                <div className="px-4 pb-3 border-t border-gray-100 flex justify-end">
+                <div className="px-4 pb-3 border-t border-gray-100 dark:border-gray-700 flex justify-end">
                   <Button
                     variant="ghost"
                     size="sm"

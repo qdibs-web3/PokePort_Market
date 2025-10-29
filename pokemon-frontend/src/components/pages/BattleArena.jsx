@@ -614,17 +614,17 @@ The battle begins! Choose your move!
                 {/* Moves */}
                 {playerPokemon && battleActive && playerHP > 0 && aiHP > 0 && (
                   <div className="mt-6">
-                    <h4 className="font-semibold mb-3">Choose Your Move:</h4>
+                    <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Choose Your Move:</h4>
                     <div className="grid grid-cols-2 gap-3">
                       {playerMoves.map((m, idx) => (
                         <button
                           key={m.name + idx}
                           onClick={() => playerUseMoveIndex(idx)}
                           disabled={busy}
-                          className="battle-card px-4 py-3 rounded-lg border-2 border-gray-300 bg-white hover:bg-blue-50 hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                          className="battle-card px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-gray-600 hover:border-blue-400 dark:hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
-                          <div className="font-semibold text-sm">{moveLabel(m)}</div>
-                          <div className="text-xs text-gray-500 capitalize mt-1">{m.type}</div>
+                          <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">{moveLabel(m)}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 capitalize mt-1">{m.type}</div>
                           {m.accuracy && m.accuracy < 100 && (
                             <div className="text-xs text-orange-500 mt-1">Acc: {m.accuracy}%</div>
                           )}

@@ -111,3 +111,80 @@ export async function fetchCardsBySet(setId) {
   // Sort by price (highest first)
   return cardsWithPricing.sort((a, b) => b.price - a.price);
 }
+
+/**
+ * Search for cards by Pokemon name across all English sets
+ * @param {string} pokemonName - The name of the Pokemon to search for
+ * @returns {Promise<Array>} Array of cards matching the Pokemon name
+ */
+export async function searchCardsByPokemon(pokemonName) {
+  try {
+    // Use the TCGdex search endpoint to find cards by name
+    const url = `${BASE}/cards?name=${encodeURIComponent(pokemonName)}`;
+    const searchResults = await fetchJson(url);
+    
+    // The API returns an array of card objects
+    const cards = Array.isArray(searchResults) ? searchResults : [];
+    
+    // Fetch detailed information with pricing for each card
+    const cardsWithDetails = await Promise.all(
+      cards.map(async (card) => {
+        try {
+          // Fetch individual card data with pricing
+          const cardData = await fetchJson(`${BASE}/cards/${encodeURIComponent(card.id)}`);
+          
+          // Extract pricing from the individual card API response
+          const tcgPlayerPricing = cardData.pricing?.tcgplayer;
+          let marketPrice = 0;
+          
+          if (tcgPlayerPricing) {
+            marketPrice = tcgPlayerPricing.normal?.marketPrice ?? 
+                         tcgPlayerPricing['reverse-holofoil']?.marketPrice ?? 
+                         tcgPlayerPricing.holofoil?.marketPrice ?? 0;
+          }
+
+          // Images
+          let images = {};
+          const imageUrl = cardData.image || card.image;
+          if (imageUrl) {
+            images.small = imageUrl.replace(/\/$/, '') + '/low.png';
+            images.large = imageUrl.replace(/\/$/, '') + '/high.png';
+          }
+
+          return {
+            id: card.id || cardData.id,
+            name: card.name || cardData.name,
+            number: card.localId || cardData.localId,
+            rarity: cardData.rarity || card.rarity || 'N/A',
+            set: cardData.set?.name || card.set?.name || 'Unknown Set',
+            images,
+            price: marketPrice,
+            fullPricing: cardData.pricing
+          };
+        } catch (error) {
+          console.error(`Error fetching details for card ${card.id}:`, error);
+          // Return basic card info if detailed fetch fails
+          return {
+            id: card.id,
+            name: card.name,
+            number: card.localId,
+            rarity: card.rarity || 'N/A',
+            set: card.set?.name || 'Unknown Set',
+            images: card.image ? {
+              small: card.image.replace(/\/$/, '') + '/low.png',
+              large: card.image.replace(/\/$/, '') + '/high.png'
+            } : {},
+            price: 0,
+            fullPricing: null
+          };
+        }
+      })
+    );
+
+    // Sort by price (highest first)
+    return cardsWithDetails.sort((a, b) => b.price - a.price);
+  } catch (error) {
+    console.error('Error searching for Pokemon cards:', error);
+    return [];
+  }
+}
