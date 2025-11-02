@@ -665,17 +665,17 @@ const UserAccount = ({ user, onCardPurchase }) => {
                   </div>
                   
                   <div className="border-t pt-4">
-                    <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                      <h4 className="font-semibold mb-2">Order Summary</h4>
+                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
+                      <h4 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Order Summary</h4>
                       {items.map((item) => (
-                        <div key={item.id} className="flex justify-between text-sm mb-1">
+                        <div key={item.id} className="flex justify-between text-sm mb-1 text-gray-700 dark:text-gray-300">
                           <span>{item.name} x{item.quantity}</span>
                           <span>{(item.price_eth * item.quantity).toFixed(4)} ETH</span>
                         </div>
                       ))}
-                      <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
+                      <div className="border-t border-gray-300 dark:border-gray-600 pt-2 mt-2 flex justify-between font-semibold text-gray-900 dark:text-gray-100">
                         <span>Total:</span>
-                        <span className="text-blue-600">{getTotalPrice().toFixed(4)} ETH</span>
+                        <span className="text-blue-600 dark:text-blue-400">{getTotalPrice().toFixed(4)} ETH</span>
                       </div>
                     </div>
                     
@@ -790,14 +790,14 @@ const UserAccount = ({ user, onCardPurchase }) => {
                       )}
                       
                       {order.customer_info && (
-                        <div className="text-xs bg-blue-50 p-3 rounded border border-blue-200">
-                          <p className="font-semibold text-gray-700 mb-1">📦 Shipping Information:</p>
-                          <p className="text-gray-600">{order.customer_info.name}</p>
-                          <p className="text-gray-600">{order.customer_info.address}</p>
-                          <p className="text-gray-600">{order.customer_info.city}, {order.customer_info.state} {order.customer_info.zipCode}</p>
-                          <p className="text-gray-600">{order.customer_info.country}</p>
+                        <div className="text-xs bg-blue-50 dark:bg-gray-700 p-3 rounded border border-blue-200 dark:border-gray-600">
+                          <p className="font-semibold text-gray-700 dark:text-gray-200 mb-1">📦 Shipping Information:</p>
+                          <p className="text-gray-600 dark:text-gray-300">{order.customer_info.name}</p>
+                          <p className="text-gray-600 dark:text-gray-300">{order.customer_info.address}</p>
+                          <p className="text-gray-600 dark:text-gray-300">{order.customer_info.city}, {order.customer_info.state} {order.customer_info.zipCode}</p>
+                          <p className="text-gray-600 dark:text-gray-300">{order.customer_info.country}</p>
                           {order.customer_info.phone && (
-                            <p className="text-gray-600 mt-1">📞 {order.customer_info.phone}</p>
+                             <p className="text-gray-600 dark:text-gray-300">{order.customer_info.phone}</p>
                           )}
                         </div>
                       )}
@@ -874,12 +874,12 @@ const UserAccount = ({ user, onCardPurchase }) => {
                           )}
                           
                           {order.customer_info && (
-                            <div className="text-xs bg-blue-50 p-3 rounded border border-blue-200">
-                              <p className="font-semibold text-gray-700 mb-1">📦 Shipping Information:</p>
-                              <p className="text-gray-600">{order.customer_info.name}</p>
-                              <p className="text-gray-600">{order.customer_info.address}</p>
-                              <p className="text-gray-600">{order.customer_info.city}, {order.customer_info.state} {order.customer_info.zipCode}</p>
-                              <p className="text-gray-600">{order.customer_info.country}</p>
+                            <div className="text-xs bg-blue-50 dark:bg-gray-700 p-3 rounded border border-blue-200 dark:border-gray-600">
+                              <p className="font-semibold text-gray-700 dark:text-gray-200 mb-1">📦 Shipping Information:</p>
+                              <p className="text-gray-600 dark:text-gray-300">{order.customer_info.name}</p>
+                              <p className="text-gray-600 dark:text-gray-300">{order.customer_info.address}</p>
+                              <p className="text-gray-600 dark:text-gray-300">{order.customer_info.city}, {order.customer_info.state} {order.customer_info.zipCode}</p>
+                              <p className="text-gray-600 dark:text-gray-300">{order.customer_info.country}</p>
                               {order.customer_info.phone && (
                                 <p className="text-gray-600 mt-1">📞 {order.customer_info.phone}</p>
                               )}
