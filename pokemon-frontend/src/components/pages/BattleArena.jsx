@@ -535,7 +535,18 @@ const BattleArena = () => {
       const aMoves = await selectMovesForPokemon(ai, 4)
 
       const pMaxHP = Math.max(1, Math.round((player.stats.hp || 50) * DEFAULT_HP_SCALE))
-      const aMaxHP = Math.max(1, Math.round((ai.stats.hp || 50) * DEFAULT_HP_SCALE))
+      let aMaxHP = Math.max(1, Math.round((ai.stats.hp || 50) * DEFAULT_HP_SCALE))
+      
+      // Balance AI HP to be within 30 HP of player's HP for fairness
+      const hpDifference = Math.abs(aMaxHP - pMaxHP)
+      if (hpDifference > 30) {
+        // Adjust AI HP to be within 30 HP range
+        if (aMaxHP > pMaxHP) {
+          aMaxHP = pMaxHP + 30
+        } else {
+          aMaxHP = Math.max(1, pMaxHP - 30)
+        }
+      }
 
       if (!mountedRef.current) return
 
@@ -761,7 +772,7 @@ const BattleArena = () => {
       {/* Main Container */}
       <div className="max-w-7xl mx-auto">
         {/* Setup Section */}
-        <div className="mb-4 p-3 sm:p-4 rounded-xl bg-white dark:bg-gray-900 shadow-lg border-2 border-blue-200 dark:border-blue-800 slide-in">
+        <div className="mb-4 p-3 sm:p-4 rounded-xl bg-white dark:bg-gray-900 shadow-lg border-2 border-yellow-200 dark:border-blue-800 slide-in">
           <h3 className="font-bold text-base sm:text-lg mb-3 text-black-900">
             Choose Your Pokémon
           </h3>
@@ -822,7 +833,7 @@ const BattleArena = () => {
             </button>
 
             <button
-              className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg border-2 border-purple-500 hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-500 hover:text-white hover:border-transparent font-bold transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg text-sm sm:text-base"
+              className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg border-3 border-yellow-200 hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-500 hover:text-white hover:border-transparent font-bold transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg text-sm sm:text-base"
               onClick={() => startBattle(null)}
               disabled={loadingBattle}
             >
@@ -832,11 +843,11 @@ const BattleArena = () => {
         </div>
 
         {/* Battle Arena */}
-        <div className="relative rounded-xl overflow-hidden shadow-2xl border-4 border-purple-400 dark:border-purple-700 mb-4">
-          {/* Animated Background */}
-          <div className="animated-bg p-4 sm:p-6 md:p-8">
+        <div className="relative rounded-xl overflow-hidden shadow-2xl border-2 border-yellow-200 dark:border-blue-700 mb-2">
+          {/* Battle Container - Gradient removed */}
+          <div className="bg-transparent dark:bg-gray-800 p-4 sm:p-6 md:p-8">
             {/* Status Message - Prominent */}
-            <div className="mb-4 p-3 sm:p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-xl shadow-lg text-center border-2 border-yellow-400">
+            <div className="mb-4 p-3 sm:p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-xl shadow-lg text-center border-2 border-yellow-200">
               <p className="font-bold text-base sm:text-lg md:text-xl text-gray-900 dark:text-gray-100">
                 {message || 'Waiting for battle to start...'}
               </p>
@@ -851,7 +862,7 @@ const BattleArena = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 items-center relative">
               {/* Player Side */}
               <div className="text-center">
-                <h3 className="font-bold text-sm sm:text-base md:text-lg mb-3 text-white drop-shadow-lg">
+                <h3 className="font-bold text-sm sm:text-base md:text-lg mb-3 text-yellow drop-shadow-lg">
                   👤 YOUR POKÉMON
                 </h3>
                 {!playerPokemon ? (
@@ -956,7 +967,7 @@ const BattleArena = () => {
 
               {/* AI Side */}
               <div className="text-center">
-                <h3 className="font-bold text-sm sm:text-base md:text-lg mb-3 text-white drop-shadow-lg">
+                <h3 className="font-bold text-sm sm:text-base md:text-lg mb-3 text-yellow drop-shadow-lg">
                   🤖 OPPONENT
                 </h3>
                 {!aiPokemon ? (
@@ -1108,12 +1119,24 @@ const BattleArena = () => {
       {/* Battle Result Modal */}
       {battleResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="battle-modal bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 sm:p-8 max-w-md w-full border-4 border-yellow-400">
+          <div className="battle-modal bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 sm:p-8 max-w-md w-full border-4 border-yellow-200 relative">
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setBattleResult(null)
+                setPlayerAnimation('')
+                setAiAnimation('')
+              }}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              aria-label="Close"
+            >
+              <span className="text-gray-600 dark:text-gray-300 text-xl font-bold leading-none">×</span>
+            </button>
             <div className="text-center">
               <div className="text-5xl sm:text-6xl mb-4">
                 {battleResult.victory ? '🎉' : '😢'}
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black mb-4 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
+              <h2 className="text-2xl sm:text-3xl font-black mb-4 bg-gradient-to-r from-yellow-200 via-orange-500 to-red-500 bg-clip-text text-transparent">
                 {battleResult.victory ? 'VICTORY!' : 'DEFEAT'}
               </h2>
               <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300 mb-6">

@@ -140,6 +140,34 @@ export async function fetchCardsBySet(setId, language = 'en') {
 }
 
 /**
+ * Get Japanese name for a Pokemon from PokeAPI
+ * @param {string} englishName - English Pokemon name
+ * @returns {Promise<string|null>} Japanese name or null if not found
+ */
+async function getJapanesePokemonName(englishName) {
+  try {
+    // First, get the pokemon data to find the species URL
+    const pokemonData = await fetch(`https://pokeapi.co/api/v2/pokemon/${englishName.toLowerCase()}`);
+    if (!pokemonData.ok) return null;
+    
+    const pokemon = await pokemonData.json();
+    const speciesUrl = pokemon.species.url;
+    
+    // Fetch species data which contains names in multiple languages
+    const speciesData = await fetch(speciesUrl);
+    if (!speciesData.ok) return null;
+    
+    const species = await speciesData.json();
+    const japaneseName = species.names.find(n => n.language.name === 'ja' || n.language.name === 'ja-Hrkt');
+    
+    return japaneseName ? japaneseName.name : null;
+  } catch (error) {
+    console.error('Error fetching Japanese name:', error);
+    return null;
+  }
+}
+
+/**
  * Search for cards by Pokemon name across all sets
  * @param {string} pokemonName - The name of the Pokemon to search for
  * @param {string} language - 'en' for English or 'ja' for Japanese
@@ -148,8 +176,25 @@ export async function fetchCardsBySet(setId, language = 'en') {
 export async function searchCardsByPokemon(pokemonName, language = 'en') {
   try {
     const BASE = getBaseUrl(language);
+    
+    // If searching Japanese cards with English input, translate the name first
+    let searchName = pokemonName;
+    if (language === 'ja') {
+      // Check if input is in English (basic check: contains only ASCII letters)
+      const isEnglishInput = /^[a-zA-Z\s-]+$/.test(pokemonName.trim());
+      
+      if (isEnglishInput) {
+        // Try to get Japanese name from PokeAPI
+        const japaneseName = await getJapanesePokemonName(pokemonName);
+        if (japaneseName) {
+          searchName = japaneseName;
+          console.log(`Translated "${pokemonName}" to "${japaneseName}"`);
+        }
+      }
+    }
+    
     // Use the TCGdex search endpoint to find cards by name
-    const url = `${BASE}/cards?name=${encodeURIComponent(pokemonName)}`;
+    const url = `${BASE}/cards?name=${encodeURIComponent(searchName)}`;
     const searchResults = await fetchJson(url);
     
     // The API returns an array of card objects

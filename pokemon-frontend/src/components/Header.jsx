@@ -1,13 +1,15 @@
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
-import { Wallet, User, ShoppingCart, Swords } from 'lucide-react'
+import { Wallet, User, ShoppingCart, Swords, Sun, Moon } from 'lucide-react'
 import { useCart } from '../contexts/CartContext'
+import { useTheme } from '../contexts/ThemeContext'
 import plogo from '/src/assets/plogo.png'
 
 const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => {
   const location = useLocation()
   const { getTotalItems } = useCart()
+  const { isDarkMode, toggleTheme } = useTheme()
   const cartItemCount = getTotalItems()
 
   // Helper function to check if a route is active
@@ -35,8 +37,23 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
             </h1>
           </div>
 
-          {/* Wallet / Cart Section */}
-          <div className="flex items-center space-x-4">
+          {/* Wallet / Cart / Theme Toggle Section */}
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            {/* Dark Mode Toggle - Mobile Only */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDarkMode ? (
+                <Sun className="w-5 h-5 text-yellow-500" />
+              ) : (
+                <Moon className="w-5 h-5 text-gray-600" />
+              )}
+            </Button>
+
             {user && (
               <Link to="/account" className="relative">
                 <Button
