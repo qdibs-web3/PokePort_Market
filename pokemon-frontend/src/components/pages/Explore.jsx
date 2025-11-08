@@ -5,11 +5,14 @@ import SeriesGrid from '/src/components/explore/SeriesGrid';
 import SetsGrid from '/src/components/explore/SetsGrid';
 import CardsGrid from '/src/components/explore/CardsGrid';
 import PokemonSearch from '/src/components/explore/PokemonSearch';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 
 export default function Explore() {
   // Toggle between "Sets" and "Pokemon" modes
   const [viewMode, setViewMode] = useState('sets'); // 'sets' or 'pokemon'
+  
+  // Language toggle state
+  const [language, setLanguage] = useState('en'); // 'en' or 'ja'
 
   const [series, setSeries] = useState([]);
   const [loadingSeries, setLoadingSeries] = useState(false);
@@ -23,6 +26,7 @@ export default function Explore() {
 
   const [cards, setCards] = useState([]);
   const [loadingCards, setLoadingCards] = useState(false);
+  const [cardsError, setCardsError] = useState(null);
   
   // Filter state for cards
   const [sortBy, setSortBy] = useState('price'); // 'alphabetical', 'price', 'number'
@@ -32,7 +36,7 @@ export default function Explore() {
     (async () => {
       setLoadingSeries(true);
       try {
-        const res = await fetchSeries();
+        const res = await fetchSeries(language);
         // API returns a direct array of series
         const list = Array.isArray(res) ? res : [];
         // Sort alphabetically for easier navigation
@@ -44,7 +48,7 @@ export default function Explore() {
         setLoadingSeries(false);
       }
     })();
-  }, []);
+  }, [language]);
 
   // Apply sorting to cards whenever cards or sortBy changes
   useEffect(() => {
@@ -53,7 +57,7 @@ export default function Explore() {
       if (sortBy === 'alphabetical') {
         sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       } else if (sortBy === 'price') {
-        sorted.sort((a, b) => (b?.price?.market ?? 0) - (a?.price?.market ?? 0));
+        sorted.sort((a, b) => (b?.price ?? 0) - (a?.price ?? 0));
       } else if (sortBy === 'number') {
         sorted.sort((a, b) => {
           const numA = parseInt(a.number || a.localId || '0');
@@ -72,6 +76,7 @@ export default function Explore() {
     setSelectedSet(null);
     setCards([]);
     setFilteredCards([]);
+    setCardsError(null);
     setLoadingSets(true);
     setSortBy('price'); // Reset sort
     
@@ -81,7 +86,7 @@ export default function Explore() {
     
     try {
       // Best try to ask sets endpoint filtered by serie id
-      const setsRes = await fetchSets({ serieId: serie.id || serie.code || serie.key });
+      const setsRes = await fetchSets({ serieId: serie.id || serie.code || serie.key, language });
       const arr = Array.isArray(setsRes) ? setsRes : setsRes.data ? setsRes.data : setsRes.sets || [];
       // sort by release date desc to show most recent first
       arr.sort((a, b) => (b.releaseDate || '').localeCompare(a.releaseDate || ''));
@@ -98,6 +103,7 @@ export default function Explore() {
     setSelectedSet(setItem);
     setCards([]);
     setFilteredCards([]);
+    setCardsError(null);
     setLoadingCards(true);
     setSortBy('price'); // Reset sort
     
@@ -105,22 +111,50 @@ export default function Explore() {
     setSetsExpanded(false);
     
     try {
-      const cardsRes = await fetchCardsBySet(setItem.id || setItem.code || setItem.setId || setItem.id);
+      const cardsRes = await fetchCardsBySet(setItem.id || setItem.code || setItem.setId || setItem.id, language);
       // Normalize response
       const arr = Array.isArray(cardsRes) ? cardsRes : cardsRes.data ? cardsRes.data : cardsRes.cards || [];
+      
+      if (arr.length === 0) {
+        // Check if this is a data availability issue
+        setCardsError({
+          type: 'no_data',
+          message: language === 'ja' 
+            ? 'This Japanese set does not have card data available in the TCGdex database yet. Try a newer set from the SV series.'
+            : 'No cards found in this set.'
+        });
+      }
+      
       setCards(arr);
     } catch (err) {
       console.error('Error loading cards for set', err);
       setCards([]);
+      setCardsError({
+        type: 'error',
+        message: 'Failed to load cards. Please try again.'
+      });
     } finally {
       setLoadingCards(false);
     }
   }
 
+  // Handle language change - reset selections
+  const handleLanguageChange = (newLanguage) => {
+    setLanguage(newLanguage);
+    setSelectedSerie(null);
+    setSelectedSet(null);
+    setSets([]);
+    setCards([]);
+    setFilteredCards([]);
+    setCardsError(null);
+    setSeriesExpanded(true);
+    setSetsExpanded(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* Toggle Section - Sets vs Pokemon */}
-      <div className="flex justify-start">
+      <div className="flex justify-between items-center">
         <div className="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-1 shadow-sm">
           <button
             onClick={() => setViewMode('sets')}
@@ -143,6 +177,32 @@ export default function Explore() {
             Singles
           </button>
         </div>
+
+        {/* Language Toggle - Shows after content loads */}
+        {((viewMode === 'sets' && series.length > 0) || viewMode === 'pokemon') && (
+          <div className="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-1 shadow-sm">
+            <button
+              onClick={() => handleLanguageChange('en')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                language === 'en'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              English
+            </button>
+            <button
+              onClick={() => handleLanguageChange('ja')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                language === 'ja'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              Japanese
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Conditional Rendering based on viewMode */}
@@ -161,7 +221,7 @@ export default function Explore() {
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   {selectedSerie 
                     ? 'Click to view all series' 
-                    : 'Browse Pokémon TCG series. Click a series to see sets.'}
+                    : `Browse Pokémon TCG series (${language === 'en' ? 'English' : 'Japanese'}). Click a series to see sets.`}
                 </p>
               </div>
               <button className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors">
@@ -276,6 +336,26 @@ export default function Explore() {
                   )}
                 </div>
                 
+                {/* Error Message for Empty Sets */}
+                {!loadingCards && cardsError && (
+                  <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-yellow-800 dark:text-yellow-300 mb-1">
+                        {cardsError.type === 'no_data' ? 'No Card Data Available' : 'Error Loading Cards'}
+                      </h3>
+                      <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                        {cardsError.message}
+                      </p>
+                      {language === 'ja' && cardsError.type === 'no_data' && (
+                        <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-2">
+                          💡 <strong>Tip:</strong> The SV (Scarlet & Violet) series has the most complete Japanese card data.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 <CardsGrid cards={filteredCards} loading={loadingCards} />
               </div>
             </section>
@@ -283,7 +363,7 @@ export default function Explore() {
         </>
       ) : (
         /* Pokemon Search Mode */
-        <PokemonSearch />
+        <PokemonSearch language={language} />
       )}
     </div>
   );

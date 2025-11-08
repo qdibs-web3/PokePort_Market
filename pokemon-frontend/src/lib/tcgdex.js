@@ -1,7 +1,6 @@
 // pokemon-frontend/src/lib/tcgdx.js
-const BASE = 'https://api.tcgdex.net/v2/en'; // using v2 English endpoint
 
-async function fetchJson(url ) {
+async function fetchJson(url) {
   try {
     const res = await fetch(url, {
       method: 'GET',
@@ -23,16 +22,31 @@ async function fetchJson(url ) {
 }
 
 /**
- * Get all series (English)
+ * Get the base URL for the specified language
+ * @param {string} language - 'en' for English or 'ja' for Japanese
+ * @returns {string} Base API URL
  */
-export async function fetchSeries() {
+function getBaseUrl(language = 'en') {
+  return `https://api.tcgdex.net/v2/${language}`;
+}
+
+/**
+ * Get all series
+ * @param {string} language - 'en' for English or 'ja' for Japanese
+ */
+export async function fetchSeries(language = 'en') {
+  const BASE = getBaseUrl(language);
   return fetchJson(`${BASE}/series`);
 }
 
 /**
  * Get sets for a given series
+ * @param {Object} params - Parameters object
+ * @param {string} params.serieId - The series ID
+ * @param {string} params.language - 'en' for English or 'ja' for Japanese
  */
-export async function fetchSets({ serieId } = {}) {
+export async function fetchSets({ serieId, language = 'en' } = {}) {
+  const BASE = getBaseUrl(language);
   const url = `${BASE}/series/${encodeURIComponent(serieId)}`;
   const data = await fetchJson(url);
 
@@ -40,7 +54,13 @@ export async function fetchSets({ serieId } = {}) {
   return data.sets || [];
 }
 
-export async function fetchCardsBySet(setId) {
+/**
+ * Fetch cards by set with pricing
+ * @param {string} setId - The set ID
+ * @param {string} language - 'en' for English or 'ja' for Japanese
+ */
+export async function fetchCardsBySet(setId, language = 'en') {
+  const BASE = getBaseUrl(language);
   const url = `${BASE}/sets/${encodeURIComponent(setId)}`;
   const setData = await fetchJson(url);
 
@@ -48,11 +68,11 @@ export async function fetchCardsBySet(setId) {
   const cards = setData.cards || [];
   console.log('Raw cards array:', cards);
 
-  // Fetch pricing data for each card individually
+  // Fetch pricing data for each card
   const cardsWithPricing = await Promise.all(
     cards.map(async (card) => {
       try {
-        // Fetch individual card data with pricing
+        // Fetch individual card data with pricing from the selected language
         const cardData = await fetchJson(`${BASE}/cards/${encodeURIComponent(card.id)}`);
         
         // Extract pricing from the individual card API response
@@ -69,17 +89,19 @@ export async function fetchCardsBySet(setId) {
         // Rarity from individual card data or fallback to set data
         const rarity = cardData.rarity || card.rarity || 'N/A';
 
-        // Images - use the image from set data or individual card data
+        // Images - properly construct URLs
         let images = {};
-        const imageUrl = card.image || cardData.image;
+        const imageUrl = cardData.image || card.image;
         if (imageUrl) {
-          images.small = imageUrl.replace(/\/$/, '') + '/low.png';
-          images.large = imageUrl.replace(/\/$/, '') + '/high.png';
+          // Remove trailing slash if present and append the image quality paths
+          const baseImageUrl = imageUrl.replace(/\/$/, '');
+          images.small = `${baseImageUrl}/low.png`;
+          images.large = `${baseImageUrl}/high.png`;
         }
 
         return {
           id: card.id,
-          name: card.name || cardData.name,
+          name: cardData.name || card.name,
           number: card.localId || cardData.localId,
           rarity,
           set: setData.name,
@@ -91,16 +113,21 @@ export async function fetchCardsBySet(setId) {
       } catch (error) {
         console.error(`Error fetching pricing for card ${card.id}:`, error);
         // Return card with default pricing if individual fetch fails
+        const imageUrl = card.image;
+        let images = {};
+        if (imageUrl) {
+          const baseImageUrl = imageUrl.replace(/\/$/, '');
+          images.small = `${baseImageUrl}/low.png`;
+          images.large = `${baseImageUrl}/high.png`;
+        }
+        
         return {
           id: card.id,
           name: card.name,
           number: card.localId,
           rarity: card.rarity || 'N/A',
           set: setData.name,
-          images: card.image ? {
-            small: card.image.replace(/\/$/, '') + '/low.png',
-            large: card.image.replace(/\/$/, '') + '/high.png'
-          } : {},
+          images,
           price: 0,
           fullPricing: null
         };
@@ -113,12 +140,14 @@ export async function fetchCardsBySet(setId) {
 }
 
 /**
- * Search for cards by Pokemon name across all English sets
+ * Search for cards by Pokemon name across all sets
  * @param {string} pokemonName - The name of the Pokemon to search for
+ * @param {string} language - 'en' for English or 'ja' for Japanese
  * @returns {Promise<Array>} Array of cards matching the Pokemon name
  */
-export async function searchCardsByPokemon(pokemonName) {
+export async function searchCardsByPokemon(pokemonName, language = 'en') {
   try {
+    const BASE = getBaseUrl(language);
     // Use the TCGdex search endpoint to find cards by name
     const url = `${BASE}/cards?name=${encodeURIComponent(pokemonName)}`;
     const searchResults = await fetchJson(url);
@@ -143,17 +172,18 @@ export async function searchCardsByPokemon(pokemonName) {
                          tcgPlayerPricing.holofoil?.marketPrice ?? 0;
           }
 
-          // Images
+          // Images - properly construct URLs
           let images = {};
           const imageUrl = cardData.image || card.image;
           if (imageUrl) {
-            images.small = imageUrl.replace(/\/$/, '') + '/low.png';
-            images.large = imageUrl.replace(/\/$/, '') + '/high.png';
+            const baseImageUrl = imageUrl.replace(/\/$/, '');
+            images.small = `${baseImageUrl}/low.png`;
+            images.large = `${baseImageUrl}/high.png`;
           }
 
           return {
             id: card.id || cardData.id,
-            name: card.name || cardData.name,
+            name: cardData.name || card.name,
             number: card.localId || cardData.localId,
             rarity: cardData.rarity || card.rarity || 'N/A',
             set: cardData.set?.name || card.set?.name || 'Unknown Set',
@@ -164,16 +194,21 @@ export async function searchCardsByPokemon(pokemonName) {
         } catch (error) {
           console.error(`Error fetching details for card ${card.id}:`, error);
           // Return basic card info if detailed fetch fails
+          const imageUrl = card.image;
+          let images = {};
+          if (imageUrl) {
+            const baseImageUrl = imageUrl.replace(/\/$/, '');
+            images.small = `${baseImageUrl}/low.png`;
+            images.large = `${baseImageUrl}/high.png`;
+          }
+          
           return {
             id: card.id,
             name: card.name,
             number: card.localId,
             rarity: card.rarity || 'N/A',
             set: card.set?.name || 'Unknown Set',
-            images: card.image ? {
-              small: card.image.replace(/\/$/, '') + '/low.png',
-              large: card.image.replace(/\/$/, '') + '/high.png'
-            } : {},
+            images,
             price: 0,
             fullPricing: null
           };

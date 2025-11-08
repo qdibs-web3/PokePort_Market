@@ -8,15 +8,17 @@ const SetsGrid = ({ sets = [], selectedSet, onSetClick }) => {
           No sets available
         </div>
       ) : (
-        sets.map((set) => {
+        sets.map((set, index) => {
           const logoUrl = set.logo ? `${set.logo}.png` : null;
+          // Use index as part of key to guarantee uniqueness (Japanese API has duplicate IDs)
+          const uniqueKey = `${index}-${set.id}-${set.name}`;
 
           return (
             <button
-              key={set.id || set.code || set.name}
+              key={uniqueKey}
               onClick={() => onSetClick(set)}
               className={`p-3 rounded-md border bg-white dark:bg-gray-700 flex flex-col items-center hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-all ${
-                selectedSet && selectedSet.id === set.id ? 'ring-2 ring-indigo-400 dark:ring-indigo-500' : 'border-gray-200 dark:border-gray-600'
+                selectedSet && selectedSet.id === set.id && selectedSet.name === set.name ? 'ring-2 ring-indigo-400 dark:ring-indigo-500' : 'border-gray-200 dark:border-gray-600'
               }`}
             >
               {logoUrl ? (

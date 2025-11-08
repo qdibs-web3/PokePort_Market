@@ -4,7 +4,7 @@ import { Search, X } from 'lucide-react';
 import { searchCardsByPokemon } from '/src/lib/tcgdex';
 import CardsGrid from './CardsGrid';
 
-export default function PokemonSearch() {
+export default function PokemonSearch({ language = 'en' }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -30,7 +30,7 @@ export default function PokemonSearch() {
       setLoading(true);
       setHasSearched(true);
       try {
-        const results = await searchCardsByPokemon(searchQuery.trim());
+        const results = await searchCardsByPokemon(searchQuery.trim(), language);
         setCards(results);
       } catch (error) {
         console.error('Error searching for Pokemon:', error);
@@ -46,7 +46,26 @@ export default function PokemonSearch() {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchQuery]);
+  }, [searchQuery, language]);
+
+  // Reset search when language changes
+  useEffect(() => {
+    if (hasSearched && searchQuery.trim()) {
+      // Re-trigger search with new language
+      setLoading(true);
+      searchCardsByPokemon(searchQuery.trim(), language)
+        .then(results => {
+          setCards(results);
+        })
+        .catch(error => {
+          console.error('Error searching for Pokemon:', error);
+          setCards([]);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [language]);
 
   const handleClearSearch = () => {
     setSearchQuery('');
@@ -64,7 +83,7 @@ export default function PokemonSearch() {
               Search a Pokémon
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 text-center">
-              Type a Pokémon name to see all cards from English sets
+              Type a Pokémon name to see all cards from {language === 'en' ? 'English' : 'Japanese'} sets
             </p>
             
             {/* Search Input */}
@@ -96,7 +115,7 @@ export default function PokemonSearch() {
               <div className="mt-4 text-center">
                 <div className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
-                  <span>Searching for "{searchQuery}"...</span>
+                  <span>Searching for "{searchQuery}" in {language === 'en' ? 'English' : 'Japanese'} sets...</span>
                 </div>
               </div>
             )}
@@ -139,7 +158,7 @@ export default function PokemonSearch() {
               Start Your Search
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-              Enter a Pokémon name above to discover all their trading cards from English sets. 
+              Enter a Pokémon name above to discover all their trading cards from {language === 'en' ? 'English' : 'Japanese'} sets. 
               Results include pricing information from TCGPlayer.
             </p>
           </div>
