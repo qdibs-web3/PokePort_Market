@@ -29,6 +29,29 @@ const userSchema = new mongoose.Schema({
   lastLogin: {
     type: Date,
     default: Date.now
+  },
+  // NEW: Daily Catch & Pokedex fields
+  caughtPokemon: [{
+    pokemonId: {
+      type: Number,
+      required: true
+    },
+    pokemonName: {
+      type: String,
+      required: true
+    },
+    sprite: {
+      type: String,
+      required: true
+    },
+    caughtAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  lastDailyCatch: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true

@@ -1,6 +1,6 @@
 // src/components/Sidebar.jsx
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Compass, ShoppingBag, User, Shield, ChevronLeft, ChevronRight, Sun, Moon, Slack } from 'lucide-react'
+import { Home, Compass, ShoppingBag, User, Shield, ChevronLeft, ChevronRight, Sun, Moon, Slack, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import plogo from '/src/assets/plogo.png'
 import pblogo from '/src/assets/pb.png'
@@ -16,7 +16,8 @@ const Sidebar = ({ user, isCollapsed, onToggleCollapse }) => {
     { path: '/', label: 'Dashboard', icon: Home, requiresAuth: false, adminOnly: false },
     { path: '/explore', label: 'Explore', icon: Compass, requiresAuth: false, adminOnly: false },
     { path: '/market', label: 'Market', icon: ShoppingBag, requiresAuth: false, adminOnly: false },
-    { path: '/battle-arena', label: 'Battle Arena', icon: Slack, requiresAuth: false, adminOnly: false }, // new
+    { path: '/daily-catch', label: 'Daily Catch', icon: Zap, requiresAuth: false, adminOnly: false }, // NEW
+    { path: '/battle-arena', label: 'Battle Arena', icon: Slack, requiresAuth: false, adminOnly: false },
     { path: '/account', label: 'My Account', icon: User, requiresAuth: true, adminOnly: false },
     { path: '/admin', label: 'Admin Panel', icon: Shield, requiresAuth: true, adminOnly: true }
   ]

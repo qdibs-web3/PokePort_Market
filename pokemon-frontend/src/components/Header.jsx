@@ -137,6 +137,16 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
             Market
           </Link>
 
+          {/* ✅ NEW: Daily Catch Link */}
+          <Link
+            to="/daily-catch"
+            className={`text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors ${
+              isActive('/daily-catch') ? 'text-blue-600 dark:text-blue-400 font-semibold' : ''
+            }`}
+          >
+            Daily Catch
+          </Link>
+
           <Link
             to="/battle-arena"
             className={`text-sm flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors ${
