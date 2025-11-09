@@ -74,6 +74,24 @@ app.post('/api/orders/notify-admin', (req, res) => {
   return handler(req, res);
 });
 
+// ✅ NEW: Daily Catch Routes
+app.get('/api/daily-catch/today', (req, res) => {
+  const handler = require('./daily-catch/today');
+  return handler(req, res);
+});
+
+app.post('/api/daily-catch/catch', (req, res) => {
+  const handler = require('./daily-catch/catch');
+  return handler(req, res);
+});
+
+// ✅ NEW: Pokedex Route
+app.get('/api/pokedex/:wallet_address', (req, res) => {
+  const handler = require('./pokedex/[wallet_address]');
+  req.query.wallet_address = req.params.wallet_address;
+  return handler(req, res);
+});
+
 // General API Routes (MUST come AFTER specific routes)
 app.use('/api/cards', require('./cards'));
 app.use('/api/users/auth', require('./users/auth'));
@@ -102,4 +120,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('  PATCH /api/orders/:id/status');
   console.log('  POST /api/orders/notify-admin');
   console.log('  GET  /api/orders/user/:wallet_address');
+  console.log('  GET  /api/daily-catch/today');
+  console.log('  POST /api/daily-catch/catch');
+  console.log('  GET  /api/pokedex/:wallet_address');
 });
