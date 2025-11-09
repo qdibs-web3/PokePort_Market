@@ -51,7 +51,7 @@ Please process this order and update the status in the admin panel.
       service: 'gmail', // or your email service
       auth: {
         user: process.env.EMAIL_USER || 'your-email@gmail.com',
-        pass: process.env.EMAIL_PASS || 'your-app-password'
+        pass: process.env.EMAIL_PASS || 'pnal cmhb qlvo zkrq'
       }
     });
 

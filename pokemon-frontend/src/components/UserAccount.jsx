@@ -535,20 +535,20 @@ const UserAccount = ({ user, onCardPurchase }) => {
               ) : (
                 <div className="space-y-4">
                   {items.map((item) => (
-                    <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg">
+                    <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg ">
                       <div className="w-16 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded flex items-center justify-center">
                         {item.image_url ? (
                           <img 
                             src={item.image_url} 
                             alt={item.name}
-                            className="w-full h-full object-cover rounded"
+                            className="w-full h-full object-cover rounded "
                           />
                         ) : (
                           <Package className="w-6 h-6 text-gray-400" />
                         )}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{item.name}</h4>
+                        <h4 className="font-large font-bold text-gray-900 dark:text-gray-200">{item.name}</h4>
                         <p className="text-sm text-gray-600">{item.price_eth} ETH each</p>
                         <p className="text-sm text-gray-600">{item.set_name} • {item.condition}</p>
                       </div>
@@ -761,10 +761,10 @@ const UserAccount = ({ user, onCardPurchase }) => {
                       </div>
                     ) : (
                       orders.filter(order => order.status === 'pending' || order.status === 'confirmed').map((order) => (
-                    <div key={order.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div key={order.id} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h4 className="font-semibold text-gray-900">
+                          <h4 className="font-semibold text-gray-900 dark:text-gray-200">
                             Order #{order.id}
                           </h4>
                           <p className="text-sm text-gray-600">
@@ -791,7 +791,7 @@ const UserAccount = ({ user, onCardPurchase }) => {
                             )}
                           </div>
                           <div className="flex-1">
-                            <h5 className="font-medium text-gray-900">{order.card.name}</h5>
+                            <h5 className="font-medium font-bold text-gray-900 dark:text-gray-200">{order.card.name}</h5>
                             <p className="text-sm text-gray-600">Quantity: {order.quantity}</p>
                             <p className="text-sm text-gray-600">
                               {order.card.set_name} • {order.card.condition}
