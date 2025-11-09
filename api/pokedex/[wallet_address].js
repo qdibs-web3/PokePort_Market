@@ -19,9 +19,28 @@ module.exports = async (req, res) => {
   try {
     await connectToDatabase();
 
-    const { wallet_address } = req.query;
+    // Get wallet address from URL params (Express/Vercel style)
+    // Try multiple ways to get the wallet address
+    let wallet_address = req.query.wallet_address || req.params.wallet_address;
+    
+    // If using path-based routing like /api/pokedex/0x123...
+    // Extract from URL
+    if (!wallet_address && req.url) {
+      const urlParts = req.url.split('/');
+      wallet_address = urlParts[urlParts.length - 1];
+      // Remove query string if present
+      if (wallet_address.includes('?')) {
+        wallet_address = wallet_address.split('?')[0];
+      }
+    }
+
+    console.log('Pokedex request - URL:', req.url);
+    console.log('Pokedex request - Query:', req.query);
+    console.log('Pokedex request - Params:', req.params);
+    console.log('Pokedex request - Wallet:', wallet_address);
 
     if (!wallet_address) {
+      console.error('No wallet address provided');
       return res.status(400).json({ error: 'Wallet address is required' });
     }
 
@@ -29,7 +48,23 @@ module.exports = async (req, res) => {
     const user = await User.findOne({ walletAddress: wallet_address.toLowerCase() });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      console.error('User not found:', wallet_address);
+      // Return empty Pokedex instead of 404 for better UX
+      return res.status(200).json({
+        caughtPokemon: [],
+        uniquePokemon: [],
+        totalCaught: 0,
+        uniqueCount: 0,
+        lastDailyCatch: null
+      });
+    }
+
+    console.log('User found:', user.walletAddress);
+    console.log('Caught Pokemon count:', user.caughtPokemon?.length || 0);
+
+    // Initialize caughtPokemon if it doesn't exist
+    if (!user.caughtPokemon) {
+      user.caughtPokemon = [];
     }
 
     // Get unique Pokemon IDs (for Pokedex display)
@@ -47,6 +82,8 @@ module.exports = async (req, res) => {
 
     const uniquePokemonArray = Object.values(uniquePokemon).sort((a, b) => a.pokemonId - b.pokemonId);
 
+    console.log('Returning Pokedex data - Unique:', uniquePokemonArray.length, 'Total:', user.caughtPokemon.length);
+
     return res.status(200).json({
       caughtPokemon: user.caughtPokemon,
       uniquePokemon: uniquePokemonArray,
@@ -56,6 +93,6 @@ module.exports = async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching Pokedex:', error);
-    return res.status(500).json({ error: 'Failed to fetch Pokedex' });
+    return res.status(500).json({ error: 'Failed to fetch Pokedex', details: error.message });
   }
 };
