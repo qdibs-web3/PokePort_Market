@@ -852,8 +852,8 @@ const BattleArena = () => {
                 {message || 'Waiting for battle to start...'}
               </p>
               {battleActive && (
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  ⚡ Turn {turnCount}
+                <p className="text-large sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Turn {turnCount}
                 </p>
               )}
             </div>
@@ -867,7 +867,7 @@ const BattleArena = () => {
                 </h3>
                 {!playerPokemon ? (
                   <div className="p-6 sm:p-8 rounded-xl border-2 border-dashed border-white/50 bg-white/20 backdrop-blur-sm">
-                    <p className="text-white text-sm sm:text-base">Choose a Pokémon!</p>
+                    <p className="text-black text-sm sm:text-base">Choose a Pokémon!</p>
                   </div>
                 ) : (
                   <div 
@@ -927,7 +927,7 @@ const BattleArena = () => {
                 {/* Moves - Mobile Optimized */}
                 {playerPokemon && battleActive && playerHP > 0 && aiHP > 0 && (
                   <div className="mt-4">
-                    <h4 className="font-bold text-sm sm:text-base mb-2 text-white drop-shadow">
+                    <h4 className="font-bold text-sm sm:text-base mb-2 text-black drop-shadow">
                       Choose Your Move:
                     </h4>
                     <div className="grid grid-cols-2 gap-2">
@@ -972,7 +972,7 @@ const BattleArena = () => {
                 </h3>
                 {!aiPokemon ? (
                   <div className="p-6 sm:p-8 rounded-xl border-2 border-dashed border-white/50 bg-white/20 backdrop-blur-sm">
-                    <p className="text-white text-sm sm:text-base">Waiting...</p>
+                    <p className="text-black text-sm sm:text-base">Waiting...</p>
                   </div>
                 ) : (
                   <div 

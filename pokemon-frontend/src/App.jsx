@@ -122,7 +122,7 @@ function App() {
                 isConnecting={isConnecting}
               />
               
-              <main className="flex-1 container mx-auto px-4 py-8">
+              <main className="flex-1 container mx-auto px-4 py-8" style={{ paddingBottom: '120px' }}>
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   
@@ -181,9 +181,10 @@ function App() {
 
                 </Routes>
               </main>
-
-              <Footer />
             </div>
+            
+            {/* Footer - positioned to align with main content, not covering sidebar */}
+            <Footer sidebarCollapsed={sidebarCollapsed} />
           </div>
         </Router>
       </CartProvider>

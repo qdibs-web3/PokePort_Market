@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-const Footer = () => {
+const Footer = ({ sidebarCollapsed = false }) => {
   const [pikachus, setPikachus] = useState([])
 
   useEffect(() => {
@@ -24,11 +24,21 @@ const Footer = () => {
   }, [])
 
   return (
-    <footer className="relative bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 border-t border-gray-200 dark:border-gray-700 overflow-hidden" style={{ height: '100px' }}>
+    <footer 
+      className="hidden md:block fixed bottom-0 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 border-t border-gray-200 dark:border-gray-700 overflow-hidden z-40" 
+      style={{ 
+        height: '90px',
+        left: sidebarCollapsed ? '60px' : 'clamp(240px, 20vw, 280px)',
+        right: 0
+      }}
+    >
       {/* Footer Content */}
-      <div className="container mx-auto px-4 h-full flex items-center justify-center">
+      <div className="container mx-auto px-4 h-full flex flex-col items-center justify-center">
         <p className="text-sm text-gray-600 dark:text-gray-400 z-10 relative">
-          © {new Date().getFullYear()} PokéPort Market. All rights reserved.
+          © {new Date().getFullYear()} PokéPort. All rights reserved.
+        </p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 z-10 relative">
+          v1.0.0
         </p>
       </div>
 

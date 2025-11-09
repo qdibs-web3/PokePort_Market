@@ -78,6 +78,7 @@ const UserAccount = ({ user, onCardPurchase }) => {
     }
 
     setCheckoutLoading(true)
+    let createdOrders = []
     
     try {
       // Create orders for each item in cart
@@ -102,7 +103,7 @@ const UserAccount = ({ user, onCardPurchase }) => {
         return await orderResponse.json()
       })
 
-      const orders = await Promise.all(orderPromises)
+      createdOrders = await Promise.all(orderPromises)
       const totalPrice = getTotalPrice()
 
       // Request payment through MetaMask
@@ -120,9 +121,9 @@ const UserAccount = ({ user, onCardPurchase }) => {
         params: [transactionParameters],
       })
 
-      // Confirm all orders with transaction hash
-      await Promise.all(orders.map(order => 
-        fetch(`/api/orders/${order.id}/confirm`, {
+      // Confirm all orders with transaction hash and customer info
+      const confirmPromises = createdOrders.map(async (order) => {
+        const confirmResponse = await fetch(`/api/orders/${order.id}/confirm`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -132,21 +133,36 @@ const UserAccount = ({ user, onCardPurchase }) => {
             customer_info: checkoutForm
           }),
         })
-      ))
-
-      // Send email notification to admin
-      await fetch('/api/orders/notify-admin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orders,
-          customer_info: checkoutForm,
-          transaction_hash: txHash,
-          total_price_eth: totalPrice
-        }),
+        
+        if (!confirmResponse.ok) {
+          const errorData = await confirmResponse.json()
+          console.error('Failed to confirm order:', order.id, errorData)
+          throw new Error(errorData.error || 'Failed to confirm order')
+        }
+        
+        return await confirmResponse.json()
       })
+      
+      const confirmedOrders = await Promise.all(confirmPromises)
+
+      // Send email notification to admin (don't fail checkout if this fails)
+      try {
+        await fetch('/api/orders/notify-admin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            orders: confirmedOrders,
+            customer_info: checkoutForm,
+            transaction_hash: txHash,
+            total_price_eth: totalPrice
+          }),
+        })
+      } catch (emailError) {
+        console.error('Email notification failed:', emailError)
+        // Continue anyway - order is still valid
+      }
 
       // Show celebration popup
       setPurchasedItems([...items])
@@ -175,6 +191,21 @@ const UserAccount = ({ user, onCardPurchase }) => {
       }
     } catch (error) {
       console.error('Checkout error:', error)
+      
+      // If transaction was rejected or failed, cancel the pending orders
+      if (createdOrders.length > 0) {
+        console.log('Cancelling pending orders due to checkout failure...')
+        await Promise.all(createdOrders.map(order => 
+          fetch(`/api/orders/${order.id}/status`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: 'cancelled' }),
+          }).catch(err => console.error('Failed to cancel order:', err))
+        ))
+      }
+      
       alert('Checkout failed: ' + error.message)
     } finally {
       setCheckoutLoading(false)

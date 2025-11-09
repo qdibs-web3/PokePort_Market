@@ -47,7 +47,7 @@ Please process this order and update the status in the admin panel.
     `;
 
     // Configure email transporter (you'll need to set up SMTP credentials)
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail', // or your email service
       auth: {
         user: process.env.EMAIL_USER || 'your-email@gmail.com',
