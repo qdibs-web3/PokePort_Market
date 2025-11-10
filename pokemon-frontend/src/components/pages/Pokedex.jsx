@@ -143,7 +143,7 @@ const Pokedex = ({ user }) => {
 
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 pokemon-font">
-          My Gen 1, 151 Pokedex
+          My 151 Pokedex
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-300">
           {pokedexData ? `${pokedexData.uniqueCount} / ${TOTAL_POKEMON} Pokemon Caught` : 'Loading...'}
