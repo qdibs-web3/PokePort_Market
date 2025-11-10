@@ -24,6 +24,8 @@ const DailyCatch = ({ user }) => {
   const [timeUntilNext, setTimeUntilNext] = useState('');
   const [caughtPokemonData, setCaughtPokemonData] = useState(null);
   const [canCatch, setCanCatch] = useState(true);
+  const [displayPokemon, setDisplayPokemon] = useState(null);
+
   
   const containerRef = useRef(null);
   const animationRef = useRef(null);
@@ -159,37 +161,73 @@ const DailyCatch = ({ user }) => {
     }
   }, [caught, caughtPokemonData, navigate]);
 
+   useEffect(() => {
+    if (!dailyPokemon) return;
+
+    const saved = localStorage.getItem('lastCaughtPokemon');
+    const lastCaught = saved ? JSON.parse(saved) : null;
+
+    if (canCatch) {
+        // Cooldown expired — allow catching new Pokémon
+        setDisplayPokemon(dailyPokemon);
+    } else if (lastCaught) {
+        // Cooldown active — show last caught Pokémon instead
+        setDisplayPokemon(lastCaught);
+    } else {
+        // Fallback in case nothing saved yet
+        setDisplayPokemon(dailyPokemon);
+    }
+    }, [dailyPokemon, canCatch]);
+
+
+
+
   const fetchDailyPokemon = async () => {
     try {
-      const walletAddress = user?.wallet_address || user?.walletAddress;
-      const response = await fetch(`/api/daily-catch/today?wallet_address=${walletAddress}`);
-      if (response.ok) {
+        const walletAddress = user?.wallet_address || user?.walletAddress;
+        const response = await fetch(`/api/daily-catch/today?wallet_address=${walletAddress}`);
+
+        if (response.ok) {
         const data = await response.json();
         console.log('Daily Pokemon loaded:', data);
         setDailyPokemon(data);
         setCanCatch(data.canCatch);
-        
+
         // Store the lastCatch time in ref
         if (data.lastCatch) {
-          lastCatchTimeRef.current = new Date(data.lastCatch).getTime();
+            lastCatchTimeRef.current = new Date(data.lastCatch).getTime();
         } else {
-          lastCatchTimeRef.current = null;
+            lastCatchTimeRef.current = null;
         }
-        
+
         if (!data.canCatch) {
-          setAlreadyCaught(true);
+            // Cooldown active — show the last caught Pokémon from localStorage
+            setAlreadyCaught(true);
+            const saved = localStorage.getItem('lastCaughtPokemon');
+            if (saved) {
+            const lastCaught = JSON.parse(saved);
+            setCaughtPokemonData(lastCaught);
+            setDisplayPokemon(lastCaught);
+            console.log("Cooldown active — showing last caught Pokémon:", lastCaught.name);
+            } else {
+            console.log("Cooldown active — but no last caught Pokémon found in storage.");
+            }
+        } else {
+            // Cooldown expired — clear any old saved Pokémon
+            localStorage.removeItem('lastCaughtPokemon');
         }
-      } else {
+        } else {
         console.error('Failed to fetch daily Pokemon:', response.status);
         setMessage('Failed to load Pokemon');
-      }
+        }
     } catch (error) {
-      console.error('Error fetching daily Pokemon:', error);
-      setMessage('Failed to load Pokemon');
+        console.error('Error fetching daily Pokemon:', error);
+        setMessage('Failed to load Pokemon');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+    };
+
 
   const handlePokeballMouseDown = (e) => {
     if (caught || !canCatch || isThrown || !user) return;
@@ -303,6 +341,7 @@ const DailyCatch = ({ user }) => {
       if (response.ok) {
         setCaught(true);
         setCaughtPokemonData(data.pokemon);
+        localStorage.setItem('lastCaughtPokemon', JSON.stringify(data.pokemon));
         setMessage(data.message);
         setCanCatch(false);
         // Update the lastCatch time
@@ -389,67 +428,75 @@ const DailyCatch = ({ user }) => {
         </p>
       </div>
 
-      {/* Pokemon Info and Pokedex Button */}
-      {dailyPokemon && (
-        <div className="mb-6 flex flex-col md:flex-row gap-4 items-stretch">
-          <Card className="flex-1 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-700">
-            <CardContent className="p-4 flex items-center gap-4">
-              <img
-                src={dailyPokemon.sprite}
-                alt={dailyPokemon.pokemonName}
+      {displayPokemon && (
+        <div className="mb-4 flex flex-col md:flex-row gap-4 items-stretch">
+            <Card className="flex-1 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-700 h-25">
+            <CardContent className="p-4 flex items-center gap-4 h-full">
+                <img
+                src={displayPokemon.sprite}
+                alt={displayPokemon.pokemonName}
                 className="w-20 h-20 object-contain"
                 style={{ imageRendering: 'pixelated' }}
-              />
-              <div className="flex-1">
+                />
+                <div className="flex-1">
                 <h3 className="text-xl font-bold capitalize text-gray-900 dark:text-gray-100 mb-1">
-                  {dailyPokemon.pokemonName}
+                    {displayPokemon.pokemonName}
                 </h3>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="secondary" className="text-xs">
-                    #{dailyPokemon.pokemonId}
-                  </Badge>
-                  {dailyPokemon.types.map(type => (
-                    <Badge 
-                      key={type} 
-                      className="text-xs capitalize bg-blue-500 hover:bg-blue-600 text-white"
-                    >
-                      {type}
+                    <Badge variant="secondary" className="text-xs">
+                    #{displayPokemon.pokemonId}
                     </Badge>
-                  ))}
+                    {displayPokemon.types?.map(type => (
+                    <Badge 
+                        key={type}
+                        className="text-xs capitalize bg-blue-500 hover:bg-blue-600 text-white"
+                    >
+                        {type}
+                    </Badge>
+                    ))}
                 </div>
-              </div>
+                </div>
             </CardContent>
-          </Card>
+            </Card>
 
-          <Card className={`md:w-auto ${canCatch ? 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-700' : 'bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-orange-200 dark:border-orange-700'}`}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <Clock className={`w-8 h-8 ${canCatch ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`} />
-              <div>
+            <Card
+            className={`md:w-auto ${canCatch
+                ? 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-700'
+                : 'bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-orange-200 dark:border-orange-700'
+            } h-25`}
+            >
+            <CardContent className="p-4 flex items-center gap-3 h-full">
+                <Clock className={`w-8 h-8 ${canCatch ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`} />
+                <div>
                 <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                  {canCatch ? 'Status' : 'Next Pokemon'}
+                    {canCatch ? 'Status' : 'Next Pokemon'}
                 </p>
                 <p className={`text-lg font-bold font-mono ${canCatch ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                  {timeUntilNext}
+                    {timeUntilNext}
                 </p>
-              </div>
+                </div>
             </CardContent>
-          </Card>
+            </Card>
 
-          <div className="md:w-auto flex items-stretch">
+            <div className="md:w-auto flex items-stretch h-25">
             <Button
-              onClick={() => navigate('/pokedex')}
-              size="lg"
-              className="w-full md:w-auto h-full pokemon-font bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg"
+                onClick={() => navigate('/pokedex')}
+                size="lg"
+                className="w-full md:w-auto h-full pokemon-font 
+                bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 
+                hover:from-blue-600 hover:via-purple-600 hover:to-pink-600
+                dark:from-blue-800 dark:via-purple-800 dark:to-pink-800 
+                text-white border border-blue-400 dark:border-blue-700 
+                shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
             >
-              <span className="text-2xl mr-2">📚</span>
-              <div className="text-left">
+                <div className="text-left">
                 <div className="font-bold">View Pokedex</div>
-                <div className="text-xs opacity-90">See your collection</div>
-              </div>
+                </div>
             </Button>
-          </div>
+            </div>
         </div>
-      )}
+        )}
+
 
       {/* Game Area */}
       <Card className="mb-6 overflow-hidden p-0 border-gray-700 border-2 rounded-4 shadow-none">
