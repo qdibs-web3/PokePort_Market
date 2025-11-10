@@ -141,7 +141,8 @@ function App() {
                             />
                           </h1>
                           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                            Select an English Pokémon series, a set, and enjoy viewing and learning the cards!
+                            Select a Pokémon series, a set, and enjoy viewing and learning the cards!
+                            Japanese is under construction, enjoy the little that is avalible.
                           </p>
                         </div>
                         <Explore />

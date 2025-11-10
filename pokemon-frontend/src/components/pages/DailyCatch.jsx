@@ -499,7 +499,7 @@ const DailyCatch = ({ user }) => {
 
 
       {/* Game Area */}
-      <Card className="mb-6 overflow-hidden p-0 border-gray-700 border-2 rounded-4 shadow-none">
+      <Card className="mb-6 overflow-hidden p-0 border-gray-700 dark:border-blue-900 border-2 rounded-4 shadow-none">
         <CardContent className="p-0 m-0">
           <div
             ref={containerRef}

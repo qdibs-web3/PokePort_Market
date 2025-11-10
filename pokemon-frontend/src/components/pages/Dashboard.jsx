@@ -120,42 +120,72 @@ export default function Dashboard() {
       </section>
 
       {/* Explore / Shop / 3D Prints */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {[ 
           {
-            title: 'Card Explorer',
+            title: 'Dashboard',
             img: epika,
             to: '/explore',
-            gradient: 'from-yellow-300 to-orange-400',
+            gradient: 'from-yellow-500 to-blue-400',
             bullets: [
               'Browse all Pokémon generations',
               'View detailed card stats & rarities',
               'Track evolving market trends',
-              'Unlock hidden Pokédex lore',
             ],
           },
           {
-            title: 'Pokémon Market',
+            title: 'Card Explorer',
             img: spika,
             to: '/market',
-            gradient: 'from-rose-400 to-pink-500',
+            gradient: 'from-green-400 to-rose-500',
             bullets: [
               'Buy & sell raw or graded cards',
               'Exclusive limited sets & bundles',
               'Custom-themed sleeves & cases',
-              'Mystery boxes — coming soon!',
             ],
           },
           {
-            title: 'Custom 3D Prints',
+            title: 'Pokémon Market',
             img: ppika,
             to: '/market',
-            gradient: 'from-sky-400 to-blue-500',
+            gradient: 'from-red-400 to-blue-500',
             bullets: [
               'Design personalized display stands',
               'Choose from legendary themes',
               'Perfect for collectors & streamers',
-              'Community-inspired creations',
+            ],
+          },
+          {
+            title: '151 Pokedex',
+            img: epika,
+            to: '/explore',
+            gradient: 'from-green-300 to-yellow-400',
+            bullets: [
+              'Browse all Pokémon generations',
+              'View detailed card stats & rarities',
+              'Track evolving market trends',
+            ],
+          },
+          {
+            title: 'Battle Arena',
+            img: spika,
+            to: '/market',
+            gradient: 'from-purple-400 to-pink-500',
+            bullets: [
+              'Buy & sell raw or graded cards',
+              'Exclusive limited sets & bundles',
+              'Custom-themed sleeves & cases',
+            ],
+          },
+          {
+            title: 'User Profile',
+            img: ppika,
+            to: '/market',
+            gradient: 'from-yellow-400 to-pink-500',
+            bullets: [
+              'Design personalized display stands',
+              'Choose from legendary themes',
+              'Perfect for collectors & streamers',
             ],
           },
         ].map((item, idx) => (

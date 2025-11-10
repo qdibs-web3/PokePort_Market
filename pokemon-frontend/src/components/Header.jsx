@@ -144,7 +144,7 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
               isActive('/daily-catch') ? 'text-blue-600 dark:text-blue-400 font-semibold' : ''
             }`}
           >
-            Daily Catch
+            151 Pokedex
           </Link>
 
           <Link

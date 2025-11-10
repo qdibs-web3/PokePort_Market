@@ -772,7 +772,7 @@ const BattleArena = () => {
       {/* Main Container */}
       <div className="max-w-7xl mx-auto">
         {/* Setup Section */}
-        <div className="mb-4 p-3 sm:p-4 rounded-xl bg-white dark:bg-gray-900 shadow-lg border-2 border-yellow-200 dark:border-blue-800 slide-in">
+        <div className="mb-4 p-3 sm:p-4 rounded-xl bg-white dark:bg-gray-900 shadow-lg border-2 border-yellow-200 dark:border-blue-900 slide-in">
           <h3 className="font-bold text-base sm:text-lg mb-3 text-black-900">
             Choose Your Pokémon
           </h3>
@@ -793,7 +793,7 @@ const BattleArena = () => {
               )}
 
               <input
-                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-sm sm:text-base transition-all"
+                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-900 bg-white dark:bg-gray-800 text-sm sm:text-base transition-all"
                 placeholder="Search Pokémon (e.g., pikachu)..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -833,7 +833,7 @@ const BattleArena = () => {
             </button>
 
             <button
-              className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg border-3 border-yellow-200 hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-500 hover:text-white hover:border-transparent font-bold transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg text-sm sm:text-base"
+              className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg border-3 border-yellow-200 dark:border-blue-900 hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-800 hover:text-white hover:border-transparent font-bold transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg text-sm sm:text-base"
               onClick={() => startBattle(null)}
               disabled={loadingBattle}
             >
@@ -843,11 +843,11 @@ const BattleArena = () => {
         </div>
 
         {/* Battle Arena */}
-        <div className="relative rounded-xl overflow-hidden shadow-2xl border-2 border-yellow-200 dark:border-blue-700 mb-2">
+        <div className="relative rounded-xl overflow-hidden shadow-2xl border-2 border-yellow-200 dark:border-blue-900 mb-2">
           {/* Battle Container - Gradient removed */}
           <div className="bg-transparent dark:bg-gray-800 p-4 sm:p-6 md:p-8">
             {/* Status Message - Prominent */}
-            <div className="mb-4 p-3 sm:p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-xl shadow-lg text-center border-2 border-yellow-200">
+            <div className="mb-4 p-3 sm:p-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-xl shadow-lg text-center border-2 border-yellow-200 dark:border-blue-900">
               <p className="font-bold text-base sm:text-lg md:text-xl text-gray-900 dark:text-gray-100">
                 {message || 'Waiting for battle to start...'}
               </p>
