@@ -1,6 +1,6 @@
 // src/components/Sidebar.jsx
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Compass, ShoppingBag, User, Shield, ChevronLeft, ChevronRight, Sun, Moon, Slack, Zap } from 'lucide-react'
+import { Home, Compass, ShoppingBag, User, Shield, ChevronLeft, ChevronRight, Sun, Moon, Slack, Zap, DollarSign } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import plogo from '/src/assets/plogo.png'
 import pblogo from '/src/assets/pb.png'
@@ -14,9 +14,10 @@ const Sidebar = ({ user, isCollapsed, onToggleCollapse }) => {
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: Home, requiresAuth: false, adminOnly: false },
+    { path: '/token', label: '$Poke', icon: DollarSign, requiresAuth: false, adminOnly: false }, // NEW
     { path: '/explore', label: 'Explore', icon: Compass, requiresAuth: false, adminOnly: false },
     { path: '/market', label: 'Market', icon: ShoppingBag, requiresAuth: false, adminOnly: false },
-    { path: '/daily-catch', label: '151 Pokedex', icon: Zap, requiresAuth: false, adminOnly: false }, // NEW
+    { path: '/daily-catch', label: '151 Pokedex', icon: Zap, requiresAuth: false, adminOnly: false },
     { path: '/battle-arena', label: 'Battle Arena', icon: Slack, requiresAuth: false, adminOnly: false },
     { path: '/account', label: 'My Account', icon: User, requiresAuth: true, adminOnly: false },
     { path: '/admin', label: 'Admin Panel', icon: Shield, requiresAuth: true, adminOnly: true }

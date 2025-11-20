@@ -119,6 +119,16 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
             Dashboard
           </Link>
 
+          {/* ✅ NEW: $Poke Link */}
+          <Link
+            to="/token"
+            className={`text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors ${
+              isActive('/token') ? 'text-blue-600 dark:text-blue-400 font-semibold' : ''
+            }`}
+          >
+            $Poke
+          </Link>
+
           <Link
             to="/explore"
             className={`text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors ${
@@ -137,7 +147,6 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
             Market
           </Link>
 
-          {/* ✅ NEW: Daily Catch Link */}
           <Link
             to="/daily-catch"
             className={`text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors ${

@@ -19,8 +19,9 @@ import AdminPanel from './components/AdminPanel'
 import Dashboard from './components/pages/Dashboard'
 import Explore from './components/pages/Explore'
 import BattleArena from './components/pages/BattleArena'
-import DailyCatch from './components/pages/DailyCatch' // NEW
-import Pokedex from './components/pages/Pokedex' // NEW
+import DailyCatch from './components/pages/DailyCatch'
+import Pokedex from './components/pages/Pokedex'
+import Token from './components/pages/Token' // NEW
 import { CartProvider } from './contexts/CartContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 
@@ -128,6 +129,9 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   
+                  {/* ✅ NEW: Token Route */}
+                  <Route path="/token" element={<Token />} />
+                  
                   <Route
                     path="/explore"
                     element={
@@ -182,10 +186,10 @@ function App() {
                   {/* Battle Arena Route */}
                   <Route path="/battle-arena" element={<BattleArena />} />
 
-                  {/* ✅ NEW: Daily Catch Route */}
+                  {/* Daily Catch Route */}
                   <Route path="/daily-catch" element={<DailyCatch user={user} />} />
 
-                  {/* ✅ NEW: Pokedex Route */}
+                  {/* Pokedex Route */}
                   <Route path="/pokedex" element={<Pokedex user={user} />} />
 
                 </Routes>
