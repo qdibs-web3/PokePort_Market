@@ -1,6 +1,7 @@
 // api/daily-catch/catch.js
 const connectToDatabase = require('../_lib/mongodb');
 const User = require('../_models/User');
+const { checkAndUnlockBadges } = require('../_lib/badge-logic');
 
 module.exports = async (req, res) => {
   // Enable CORS
@@ -112,6 +113,12 @@ module.exports = async (req, res) => {
     console.log('Catch successful for user:', wallet_address);
     console.log('Total unique Pokemon:', updatedUser.caughtPokemon.length);
 
+    // Check for new badges
+    const newBadges = await checkAndUnlockBadges(updatedUser);
+    if (newBadges.length > 0) {
+      console.log(`User unlocked ${newBadges.length} new badges!`);
+    }
+
     return res.status(200).json({ 
       success: true, 
       message: alreadyHasPokemon 
@@ -124,7 +131,8 @@ module.exports = async (req, res) => {
         caughtAt: new Date()
       },
       isNewEntry: !alreadyHasPokemon,
-      totalCaught: updatedUser.caughtPokemon.length
+      totalCaught: updatedUser.caughtPokemon.length,
+      newBadges: newBadges
     });
   } catch (error) {
     console.error('Error catching Pokemon:', error);

@@ -39,8 +39,8 @@ module.exports = async (req, res) => {
     console.log('Pokedex request - Params:', req.params);
     console.log('Pokedex request - Wallet:', wallet_address);
 
-    if (!wallet_address) {
-      console.error('No wallet address provided');
+    if (!wallet_address || wallet_address === 'undefined') {
+      console.error('No valid wallet address provided');
       return res.status(400).json({ error: 'Wallet address is required' });
     }
 

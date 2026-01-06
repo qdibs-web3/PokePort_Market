@@ -27,21 +27,15 @@ module.exports = async (req, res) => {
     // Find existing user or create new one
     let user = await User.findOne({ walletAddress: wallet_address.toLowerCase() });
 
-    if (!user) {
-      // Create new user
-      const username = `${wallet_address.slice(0, 6)}...${wallet_address.slice(-4)}`;
-      user = new User({
-        walletAddress: wallet_address.toLowerCase(),
-        username,
-        email,
-        lastLogin: new Date()
-      });
-      await user.save();
-    } else {
-      // Update last login
-      user.lastLogin = new Date();
-      await user.save();
-    }
+    const username = `${wallet_address.slice(0, 6)}...${wallet_address.slice(-4)}`;
+    user = await User.findOneAndUpdate(
+      { walletAddress: wallet_address.toLowerCase() },
+      { 
+        $set: { lastLogin: new Date() },
+        $setOnInsert: { username, email }
+      },
+      { upsert: true, new: true }
+    );
 
     // Format response to match frontend expectations
     const formattedUser = {

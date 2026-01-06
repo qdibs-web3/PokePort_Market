@@ -23,6 +23,7 @@ const DailyCatch = ({ user }) => {
   const [throwVelocity, setThrowVelocity] = useState({ x: 0, y: 0 });
   const [timeUntilNext, setTimeUntilNext] = useState('');
   const [caughtPokemonData, setCaughtPokemonData] = useState(null);
+  const [newBadges, setNewBadges] = useState([]);
   const [canCatch, setCanCatch] = useState(true);
   const [displayPokemon, setDisplayPokemon] = useState(null);
 
@@ -341,6 +342,7 @@ const DailyCatch = ({ user }) => {
       if (response.ok) {
         setCaught(true);
         setCaughtPokemonData(data.pokemon);
+        setNewBadges(data.newBadges || []);
         localStorage.setItem('lastCaughtPokemon', JSON.stringify(data.pokemon));
         setMessage(data.message);
         setCanCatch(false);
@@ -604,6 +606,18 @@ const DailyCatch = ({ user }) => {
                   <p className="text-2xl text-yellow-300 capitalize mb-3">
                     {dailyPokemon.pokemonName}
                   </p>
+                  {newBadges.length > 0 && (
+                    <div className="mb-4 animate-pulse">
+                      <p className="text-yellow-400 font-bold text-lg mb-2">New Badges Unlocked!</p>
+                      <div className="flex justify-center gap-2 flex-wrap">
+                        {newBadges.map(badge => (
+                          <div key={badge.badgeId} className="bg-yellow-400/20 border border-yellow-400 px-3 py-1 rounded-full">
+                            <span className="text-yellow-400 text-xs font-bold uppercase">{badge.badgeId.replace(/_/g, ' ')}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <p className="text-sm text-gray-200 animate-pulse">
                     Taking you to your Pokedex...
                   </p>

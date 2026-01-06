@@ -52,7 +52,17 @@ const userSchema = new mongoose.Schema({
   lastDailyCatch: {
     type: Date,
     default: null
-  }
+  },
+  badges: [{
+    badgeId: {
+      type: String,
+      required: true
+    },
+    unlockedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true
 });

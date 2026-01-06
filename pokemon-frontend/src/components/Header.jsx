@@ -157,14 +157,14 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
           </Link>
 
           <Link
-            to="/battle-arena"
+            to="/badges"
             className={`text-sm flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors ${
-              isActive('/battle-arena')
+              isActive('/badges')
                 ? 'text-blue-600 dark:text-blue-400 font-semibold'
                 : ''
             }`}
           >
-            Battle
+            Badges
           </Link>
 
           {user && (

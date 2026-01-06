@@ -18,7 +18,7 @@ import UserAccount from './components/UserAccount'
 import AdminPanel from './components/AdminPanel'
 import Dashboard from './components/pages/Dashboard'
 import Explore from './components/pages/Explore'
-import BattleArena from './components/pages/BattleArena'
+import Badges from './components/pages/Badges'
 import DailyCatch from './components/pages/DailyCatch'
 import Pokedex from './components/pages/Pokedex'
 import Token from './components/pages/Token' // NEW
@@ -183,8 +183,8 @@ function App() {
                   <Route path="/account" element={<UserAccount user={user} onCardPurchase={loadCards} />} />
                   <Route path="/admin" element={<AdminPanel user={user} onCardUpdate={loadCards} />} />
 
-                  {/* Battle Arena Route */}
-                  <Route path="/battle-arena" element={<BattleArena />} />
+                  {/* Badges Route */}
+                  <Route path="/badges" element={<Badges user={user} />} />
 
                   {/* Daily Catch Route */}
                   <Route path="/daily-catch" element={<DailyCatch user={user} />} />
