@@ -34,9 +34,12 @@ module.exports = async (req, res) => {
     // Trigger badge check
     await checkAndUnlockBadges(user);
 
+    // Fetch fresh user to get updated badges
+    const updatedUser = await User.findOne({ walletAddress: walletAddress.toLowerCase() });
+
     return res.status(200).json({ 
       success: true, 
-      badges: user.badges || []
+      badges: updatedUser.badges || []
     });
   } catch (error) {
     console.error('Error checking badges:', error);

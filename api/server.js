@@ -85,7 +85,12 @@ app.post('/api/daily-catch/catch', (req, res) => {
   return handler(req, res);
 });
 
-// ✅ NEW: Pokedex Route
+// ✅ NEW: Pokedex Routes
+app.post('/api/pokedex/check-badges', (req, res) => {
+  const handler = require('./pokedex/check-badges');
+  return handler(req, res);
+});
+
 app.get('/api/pokedex/:wallet_address', (req, res) => {
   const handler = require('./pokedex/[wallet_address]');
   req.query.wallet_address = req.params.wallet_address;
@@ -123,4 +128,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('  GET  /api/daily-catch/today');
   console.log('  POST /api/daily-catch/catch');
   console.log('  GET  /api/pokedex/:wallet_address');
+  console.log('  POST /api/pokedex/check-badges');
 });
