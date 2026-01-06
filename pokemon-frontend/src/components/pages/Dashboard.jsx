@@ -125,7 +125,7 @@ export default function Dashboard() {
           {
             title: 'Dashboard',
             img: epika,
-            to: '/explore',
+            to: '/',
             gradient: 'from-yellow-500 to-blue-400',
             bullets: [
               'Browse all Pokémon generations',
@@ -136,7 +136,7 @@ export default function Dashboard() {
           {
             title: 'Card Explorer',
             img: spika,
-            to: '/market',
+            to: '/',
             gradient: 'from-green-400 to-rose-500',
             bullets: [
               'Buy & sell raw or graded cards',
@@ -147,7 +147,7 @@ export default function Dashboard() {
           {
             title: 'Pokémon Market',
             img: ppika,
-            to: '/market',
+            to: '/',
             gradient: 'from-red-400 to-blue-500',
             bullets: [
               'Design personalized display stands',
@@ -169,7 +169,7 @@ export default function Dashboard() {
           {
             title: 'Battle Arena',
             img: spika,
-            to: '/market',
+            to: '/',
             gradient: 'from-purple-400 to-pink-500',
             bullets: [
               'Buy & sell raw or graded cards',
@@ -180,7 +180,7 @@ export default function Dashboard() {
           {
             title: 'User Profile',
             img: ppika,
-            to: '/market',
+            to: '/',
             gradient: 'from-yellow-400 to-pink-500',
             bullets: [
               'Design personalized display stands',
