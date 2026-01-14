@@ -56,7 +56,7 @@ const Badges = ({ user }) => {
           const updatedData = await checkResponse.json()
           setUnlockedBadges(updatedData.badges || [])
         } else {
-          setUnlockedBadges(data.user?.badges || [])
+          setUnlockedBadges(data.badges || [])
         }
       }
     } catch (error) {

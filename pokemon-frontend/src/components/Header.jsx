@@ -54,7 +54,7 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
               )}
             </Button>
 
-            {/* {user && (
+            {user && (
               <Link to="/account" className="relative">
                 <Button
                   variant="outline"
@@ -69,7 +69,7 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
                   )}
                 </Button>
               </Link>
-            )} */}
+            )} 
 
             {user ? (
               <div className="flex items-center space-x-3">
@@ -138,14 +138,14 @@ const Header = ({ user, onConnectWallet, onDisconnectWallet, isConnecting }) => 
             Explore
           </Link>
 
-          {/* <Link
+          <Link
             to="/market"
             className={`text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors ${
               isActive('/market') ? 'text-blue-600 dark:text-blue-400 font-semibold' : ''
             }`}
           >
             Market
-          </Link> */}
+          </Link>
 
           <Link
             to="/daily-catch"

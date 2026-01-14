@@ -96,10 +96,13 @@ async function checkAndUnlockBadges(user) {
   if (newBadges.length > 0) {
     // Use findOneAndUpdate to avoid VersionError
     const User = require('../_models/User');
-    await User.findOneAndUpdate(
+    const updatedUser = await User.findOneAndUpdate(
       { _id: user._id },
-      { $push: { badges: { $each: newBadges } } }
+      { $push: { badges: { $each: newBadges } } },
+      { new: true }
     );
+    // Update the local user object as well
+    user.badges = updatedUser.badges;
     return newBadges;
   }
 

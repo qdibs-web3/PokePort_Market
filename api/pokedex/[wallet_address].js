@@ -89,7 +89,8 @@ module.exports = async (req, res) => {
       uniquePokemon: uniquePokemonArray,
       totalCaught: user.caughtPokemon.length,
       uniqueCount: uniquePokemonArray.length,
-      lastDailyCatch: user.lastDailyCatch
+      lastDailyCatch: user.lastDailyCatch,
+      badges: user.badges || []
     });
   } catch (error) {
     console.error('Error fetching Pokedex:', error);

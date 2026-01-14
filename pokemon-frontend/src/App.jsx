@@ -154,7 +154,7 @@ function App() {
                     }
                   />
 
-                  {/* <Route 
+                  { <Route 
                     path="/market" 
                     element={
                       <div>
@@ -178,7 +178,7 @@ function App() {
                         />
                       </div>
                     } 
-                  /> */}
+                  /> }
 
                   <Route path="/account" element={<UserAccount user={user} onCardPurchase={loadCards} />} />
                   <Route path="/admin" element={<AdminPanel user={user} onCardUpdate={loadCards} />} />

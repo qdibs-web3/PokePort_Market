@@ -16,7 +16,7 @@ const Sidebar = ({ user, isCollapsed, onToggleCollapse }) => {
     { path: '/', label: 'Dashboard', icon: Home, requiresAuth: false, adminOnly: false },
     { path: '/explore', label: 'Explore', icon: Compass, requiresAuth: false, adminOnly: false },
     { path: '/token', label: '$Poke', icon: DollarSign, requiresAuth: false, adminOnly: false }, // NEW
-    // { path: '/market', label: 'Market', icon: ShoppingBag, requiresAuth: false, adminOnly: false },
+    { path: '/market', label: 'Market', icon: ShoppingBag, requiresAuth: false, adminOnly: false },
     { path: '/daily-catch', label: '151 Pokedex', icon: Zap, requiresAuth: false, adminOnly: false },
     { path: '/badges', label: 'Badges', icon: Award, requiresAuth: false, adminOnly: false },
     { path: '/account', label: 'My Account', icon: User, requiresAuth: true, adminOnly: false },
