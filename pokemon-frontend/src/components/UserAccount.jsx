@@ -52,7 +52,7 @@ const UserAccount = ({ user, onCardPurchase }) => {
 
   const loadUserOrders = async () => {
     try {
-      const response = await fetch(`/api/orders/user/${user.wallet_address}`)
+      const response = await fetch(`/api/orders/user/${encodeURIComponent(user.wallet_address)}`)
       if (response.ok) {
         const data = await response.json()
         setOrders(data.orders || [])
@@ -407,11 +407,11 @@ const UserAccount = ({ user, onCardPurchase }) => {
         </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-1">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="cart">Cart ({items.length})</TabsTrigger>
           <TabsTrigger value="checkout">Checkout</TabsTrigger>
-          <TabsTrigger value="orders">Orders</TabsTrigger> 
+          <TabsTrigger value="orders">Orders</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
