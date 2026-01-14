@@ -409,9 +409,9 @@ const UserAccount = ({ user, onCardPurchase }) => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-1">
           <TabsTrigger value="profile">Profile</TabsTrigger>
-          {/* <TabsTrigger value="cart">Cart ({items.length})</TabsTrigger>
+          <TabsTrigger value="cart">Cart ({items.length})</TabsTrigger>
           <TabsTrigger value="checkout">Checkout</TabsTrigger>
-          <TabsTrigger value="orders">Orders</TabsTrigger> */}
+          <TabsTrigger value="orders">Orders</TabsTrigger> 
         </TabsList>
 
         <TabsContent value="profile">
